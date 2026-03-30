@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Sullivan Lift"/>
+<title>Sullivan Lift</title>
+<style>
+  :root {
+    /* ── Teal/green palette ── */
+    --bg:         #060a09;
+    --card:       #0b100e;
+    --card2:      #0f1612;
+    --border:     #162018;
+    --border2:    #1c2a20;
+    --accent:     #00e5a0;   /* primary teal */
+    --accent2:    #00b87e;   /* deeper teal */
+    --accent3:    #00ffc8;   /* bright highlight */
+    --text:       #d8ede6;
+    --muted:      #304840;
+    --dim:        #111a14;
+    --done-bg:    #071410;
+    --done-bd:    #0d3025;
+    --done-text:  #00c882;
+    --coral:      #ff6b6b;
+    --coral-bg:   #120808;
+    --coral-bd:   #2e1010;
+    --teal-dim:   #081812;
+    --teal-bd:    #0d3028;
+    --amber:      #ffb340;
+    --amber-bg:   #100d00;
+    --amber-bd:   #2a2000;
+    --row:        #090e0c;
+    --font:       'Courier New', 'Menlo', monospace;
+    --r:          5px;
+    --safe-top:   env(safe-area-inset-top, 0px);
+    --safe-bot:   env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%; background: var(--bg); color: var(--text);
+    font-family: var(--font); overscroll-behavior: none;
+  }
+
+  /* ── APP SHELL ── */
+  #app { display: flex; flex-direction: column; height: 100%; max-width: 430px; margin: 0 auto; }
+
+  /* ── HEADER ── */
+  #header {
+    background: var(--accent);
+    padding: 12px 16px 9px;
+    padding-top: calc(10px + var(--safe-top));
+    display: flex; justify-content: space-between; align-items: flex-end;
+    flex-shrink: 0;
+    border-bottom: 2px solid var(--accent2);
+  }
+  #hdr-left { display: flex; flex-direction: column; gap: 1px; }
+  #hdr-title { font-size: 12px; font-weight: 700; color: #001a10; letter-spacing: .22em; }
+  #hdr-sub   { font-size: 8px; color: #00000055; letter-spacing: .08em; }
+  #hdr-right { font-size: 8px; color: #00000040; letter-spacing: .05em; text-align: right; }
+
+  /* ── TABS ── */
+  #tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .tab-btn {
+    flex: 1; padding: 9px 2px; font-family: var(--font); font-size: 8.5px; font-weight: 700;
+    letter-spacing: .1em; border: none; background: transparent; color: var(--muted);
+    cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
+    text-transform: uppercase;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── SCROLL BODY ── */
+  #body {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 10px 10px calc(10px + var(--safe-bot));
+  }
+
+  /* ── DAY PICKER ── */
+  #day-picker { display: flex; gap: 5px; margin-bottom: 10px; }
+  .day-btn {
+    flex: 1; padding: 7px 0 6px; font-family: var(--font); font-size: 9px; font-weight: 700;
+    letter-spacing: .06em; border: 1px solid var(--border); background: var(--card);
+    color: var(--muted); cursor: pointer; border-radius: var(--r); transition: all .12s;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .day-btn .d-num   { font-size: 13px; line-height: 1; }
+  .day-btn .d-label { font-size: 6.5px; letter-spacing: .07em; opacity: .5; text-transform: uppercase; }
+  .day-btn.active   { background: var(--accent); color: #001a10; border-color: var(--accent); }
+  .day-btn.active .d-label { opacity: .45; }
+
+  /* ── SECTION CARD ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r); margin-bottom: 8px; overflow: hidden;
+  }
+  .card-hdr {
+    padding: 7px 11px; font-size: 7.5px; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--accent2);
+  }
+  .card-hdr-sub { font-size: 6.5px; color: var(--muted); letter-spacing: .08em; font-weight: 400; }
+
+  /* warmup */
+  .warmup-body {
+    padding: 8px 11px; font-size: 8.5px; color: var(--muted);
+    letter-spacing: .04em; line-height: 1.7; text-transform: uppercase;
+  }
+
+  /* ── EXERCISE ROW ── */
+  .ex-row {
+    padding: 9px 11px; border-bottom: 1px solid var(--border);
+    transition: background .2s;
+  }
+  .ex-row:last-child { border-bottom: none; }
+  .ex-row.done { background: var(--done-bg); }
+
+  .ex-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 6px; }
+  .ex-name {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; flex: 1; transition: color .2s;
+  }
+  .done .ex-name { color: var(--done-text); text-decoration: line-through; opacity: .6; }
+  .ex-note { font-size: 7.5px; color: var(--muted); font-style: italic; flex-shrink: 0; }
+
+  /* done btn */
+  .done-btn {
+    padding: 3px 9px; font-family: var(--font); font-size: 8px; font-weight: 700;
+    border-radius: 3px; border: 1px solid var(--border2); background: var(--dim);
+    color: var(--muted); cursor: pointer; white-space: nowrap; transition: all .15s;
+    flex-shrink: 0; min-height: 26px; letter-spacing: .06em;
+  }
+  .done-btn.marked {
+    background: var(--done-bg); border-color: var(--done-bd); color: var(--done-text);
+  }
+
+  /* set tiles */
+  .set-tiles { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tile {
+    background: var(--row); border: 1px solid var(--border2); border-radius: 3px;
+    padding: 4px 6px; display: flex; flex-direction: column; align-items: center;
+    min-width: 46px; transition: all .2s;
+  }
+  .done .tile { background: #071410; border-color: var(--done-bd); }
+  .tile .t-set  { font-size: 6.5px; color: #1c2a20; letter-spacing: .1em; line-height: 1; }
+  .tile .t-wt   { font-size: 11px; font-weight: 700; color: var(--accent); line-height: 1.2; }
+  .done .tile .t-wt { color: var(--done-text); }
+  .tile .t-true { font-size: 7.5px; color: var(--amber); line-height: 1.1; }
+  .tile .t-rep  { font-size: 7.5px; color: var(--muted); line-height: 1.2; }
+  .prog-tag { margin-top: 4px; font-size: 7.5px; color: var(--done-text); opacity: .4; letter-spacing: .04em; }
+
+  /* ── PENDULUM LEGEND ── */
+  .pend-legend {
+    background: var(--amber-bg); border: 1px solid var(--amber-bd);
+    border-radius: var(--r); margin-bottom: 8px; padding: 6px 11px;
+    display: flex; gap: 8px; align-items: center;
+  }
+  .pend-legend .pl-tag { font-size: 7px; color: var(--amber); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
+  .pend-legend .pl-desc { font-size: 7.5px; color: #3a2a00; }
+
+  /* ── CORE SUPERSET ── */
+  .core-card {
+    background: var(--teal-dim); border: 1px solid var(--teal-bd);
+    border-radius: var(--r); margin-bottom: 8px; overflow: hidden;
+  }
+  .core-hdr {
+    padding: 7px 11px; font-size: 7.5px; font-weight: 700; color: var(--accent2);
+    letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--teal-bd);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .core-hdr-sub { font-size: 6.5px; color: var(--muted); font-weight: 400; letter-spacing: .08em; }
+  .core-move {
+    display: flex; gap: 9px; padding: 8px 11px;
+    border-bottom: 1px solid var(--teal-bd); align-items: flex-start;
+  }
+  .core-move:last-child { border-bottom: none; }
+  .core-idx { font-size: 8.5px; font-weight: 700; color: var(--accent2); min-width: 13px; padding-top: 1px; }
+  .core-body {}
+  .core-name { font-size: 9.5px; font-weight: 700; color: var(--accent2); text-transform: uppercase; letter-spacing: .06em; }
+  .core-detail { font-size: 8px; color: #1a4035; margin-top: 2px; line-height: 1.45; }
+  .core-why { font-size: 6.5px; color: var(--accent2); opacity: .35; letter-spacing: .08em; margin-top: 3px; text-transform: uppercase; }
+
+  /* ── FINISHER ── */
+  .finisher-card {
+    background: var(--coral-bg); border: 1px solid var(--coral-bd);
+    border-radius: var(--r); margin-bottom: 8px; padding: 9px 11px;
+  }
+  .finisher-lbl { font-size: 7.5px; font-weight: 700; color: var(--coral); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+  .finisher-txt { font-size: 10.5px; color: #883333; }
+
+  /* ── REST FOOTER ── */
+  .rest-row {
+    display: flex; justify-content: space-between; padding: 6px 11px;
+    border-top: 1px solid var(--border);
+  }
+  .rest-row span { font-size: 7px; color: #162018; letter-spacing: .07em; text-transform: uppercase; }
+
+  /* ── PROGRESS LOG ── */
+  .log-empty {
+    padding: 28px 16px; font-size: 10px; color: var(--muted);
+    text-align: center; line-height: 1.9;
+  }
+  .log-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 11px; border-bottom: 1px solid var(--border);
+  }
+  .log-row:last-child { border-bottom: none; }
+  .log-name { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .log-ct   { font-size: 8px; color: var(--done-text); margin-top: 2px; }
+  .reset-btn {
+    padding: 4px 9px; font-family: var(--font); font-size: 8px; font-weight: 700;
+    background: var(--coral-bg); border: 1px solid var(--coral-bd); color: var(--coral);
+    cursor: pointer; border-radius: 3px; min-height: 28px; letter-spacing: .06em;
+  }
+
+  /* ── EXPORT / IMPORT ── */
+  .export-card {
+    background: var(--card2); border: 1px solid var(--border2);
+    border-radius: var(--r); margin-bottom: 8px; overflow: hidden;
+  }
+  .export-hdr {
+    padding: 7px 11px; font-size: 7.5px; font-weight: 700; color: var(--accent2);
+    letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--border2);
+  }
+  .export-body { padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; }
+  .export-desc { font-size: 8px; color: var(--muted); line-height: 1.6; }
+  .export-blob {
+    background: var(--row); border: 1px solid var(--border2); border-radius: 3px;
+    padding: 8px; font-size: 8px; color: var(--accent2); word-break: break-all;
+    line-height: 1.5; letter-spacing: .02em; min-height: 40px;
+    white-space: pre-wrap; font-family: var(--font);
+  }
+  .action-row { display: flex; gap: 6px; }
+  .act-btn {
+    flex: 1; padding: 8px 4px; font-family: var(--font); font-size: 8.5px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; border-radius: 3px; cursor: pointer;
+    border: 1px solid var(--border2); background: var(--dim); color: var(--muted);
+    transition: all .15s; min-height: 34px;
+  }
+  .act-btn.primary { background: var(--accent2); border-color: var(--accent2); color: #001a10; }
+  .import-area {
+    background: var(--row); border: 1px solid var(--border2); border-radius: 3px;
+    padding: 8px; font-size: 8px; color: var(--text); font-family: var(--font);
+    width: 100%; resize: none; height: 70px; outline: none; letter-spacing: .02em;
+  }
+  .import-area:focus { border-color: var(--accent2); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; top: calc(var(--safe-top) + 14px); left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    background: var(--accent); color: #001a10;
+    padding: 7px 18px; border-radius: 3px; font-family: var(--font); font-size: 9.5px;
+    font-weight: 700; letter-spacing: .1em; white-space: nowrap;
+    pointer-events: none; opacity: 0; transition: opacity .2s, transform .2s; z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 2px 0 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div id="hdr-left">
+      <span id="hdr-title">SULLIVAN LIFT</span>
+      <span id="hdr-sub">175 LB · REPS → WEIGHT</span>
+    </div>
+    <div id="hdr-right">COWBOYS FIT<br>5-DAY SPLIT</div>
+  </div>
+  <div id="tabs">
+    <button class="tab-btn active" onclick="showTab('workout')" id="tab-workout">Workout</button>
+    <button class="tab-btn" onclick="showTab('log')"     id="tab-log">Progress</button>
+    <button class="tab-btn" onclick="showTab('sync')"    id="tab-sync">Sync</button>
+  </div>
+  <div id="body"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════
+const SK = 'sullivan_wk_v4';
+function loadState() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch { return {}; } }
+function saveState(s) { try { localStorage.setItem(SK, JSON.stringify(s)); } catch {} }
+
+// ═══════════════════════════════════════════
+// PENDULUM
+// ═══════════════════════════════════════════
+function pendTrue(plates) { return Math.round(plates * 1.5 + 90); }
+
+// ═══════════════════════════════════════════
+// PROGRESSION MAP
+// ═══════════════════════════════════════════
+const PROG = {
+  'Bench Press':              { step: 5   },
+  'DB Bench Press':           { step: 2.5 },
+  'Incline DB Press':         { step: 2.5 },
+  'Seated DB Shoulder Press': { step: 2.5 },
+  'Cable Lateral Raises':     { step: 2.5 },
+  'Cable Dips':               { step: -5  },
+  'Triceps Pushdown':         { step: 5   },
+  'Triceps Burnout':          { step: 2   },
+  'Pendulum Squat':           { step: 10  },
+  'Leg Press':                { step: 20  },
+  'Bulgarian Split Squat':    { step: 5   },
+  'Walking Lunges':           { step: 5   },
+  'Quad Extension':           { step: 10  },
+  'Standing Calf Raise':      { step: 10  },
+  'Barbell Deadlift':         { step: 10  },
+  'Cable Pull-Through':       { step: 5   },
+  'Hamstring Curl':           { step: 10  },
+  'KB Swings':                { step: 9   },
+  'Assisted Pull-Ups':        { step: -10 },
+  'Barbell Row':              { step: 5   },
+  'Lat Pulldown':             { step: 10  },
+  'SA Lat Pulldown':          { step: 5   },
+  'Cable Row':                { step: 10  },
+  'Face Pull':                { step: 5   },
+  'Rear Delt Fly':            { step: 5   },
+  'EZ Bar Curl':              { step: 5   },
+  'Hammer Curl':              { step: 5   },
+  'Romanian Deadlift':        { step: 10  },
+  'Hip Thrust':               { step: 20  },
+  'Hamstring Curl Burnout':   { step: 10  },
+  'Adductor Press':           { step: 5   },
+};
+
+function bumpW(w, step) {
+  if (typeof w === 'number') return Math.round((w + step) * 10) / 10;
+  if (typeof w === 'string') {
+    if (w.endsWith('a')) return Math.max(0, parseFloat(w) + step) + 'a';
+    if (w.startsWith('+')) return '+' + (parseFloat(w.slice(1)) + step);
+  }
+  return w;
+}
+
+function applySteps(sets, name, steps) {
+  if (!steps || !PROG[name]) return sets;
+  return sets.map(s => {
+    if (s.w === '—' || s.w === 'BW' || s.w === 'choice') return s;
+    let w = s.w;
+    for (let i = 0; i < steps; i++) w = bumpW(w, PROG[name].step);
+    return { ...s, w };
+  });
+}
+
+// ═══════════════════════════════════════════
+// CORE POOL + DAY SELECTIONS
+// ═══════════════════════════════════════════
+const CP = {
+  MC: { label: 'MOUNTAIN CLIMBERS',       detail: '30 reps · slow drive · brace full set · no hip hike' },
+  DB: { label: 'DEAD BUGS',               detail: '10 ea · exhale on extend · press lumbar flat · slow' },
+  BC: { label: 'BICYCLE CRUNCHES',        detail: '20 contra · full rotation · elbow past knee · no neck pull' },
+  OE: { label: 'OBLIQUE WEIGHTED EXT.',   detail: '12 ea · 25 lb plate · 2s pause at stretch · ribs down' },
+  DS: { label: 'WEIGHTED DECLINE SITUP',  detail: '12 reps · 25 lb plate · 3s eccentric · full ROM' },
+};
+
+// Rationale: ordered by CNS/mechanical fit to day's focus
+const DAY_CORE = {
+  // D1 PUSH — fresh CNS, anterior shoulder loaded. Anti-extension first, then rotational, metabolic last.
+  1: [
+    { ...CP.DB, why: 'ANTI-EXTENSION — reinforce bracing post-press' },
+    { ...CP.BC, why: 'ROTATIONAL — shoulder-free' },
+    { ...CP.MC, why: 'METABOLIC CLOSE' },
+  ],
+  // D2 QUADS/GLUTES — sagittal overload, hip flexors taxed. Lateral chain leads, then metabolic, hip-flexor unload last.
+  2: [
+    { ...CP.OE, why: 'LATERAL CHAIN — offset sagittal dominance' },
+    { ...CP.MC, why: 'METABOLIC — hip flexors pre-fatigued = natural control' },
+    { ...CP.DB, why: 'HIP FLEXOR UNLOAD — lumbar flat cue' },
+  ],
+  // D3 POSTERIOR CHAIN — peak CNS (deadlifts). Mirror deadlift brace, then anterior balance, rotational recovery.
+  3: [
+    { ...CP.DB, why: 'DEADLIFT BRACE REINFORCEMENT' },
+    { ...CP.DS, why: 'ANTERIOR BALANCE — offset posterior dominance' },
+    { ...CP.BC, why: 'ROTATIONAL RECOVERY' },
+  ],
+  // D4 PULL — scapular/lat dominant. Rotational synergy first, lateral chain, metabolic close.
+  4: [
+    { ...CP.BC, why: 'ROTATIONAL — lat activation synergy' },
+    { ...CP.OE, why: 'LATERAL CHAIN — shoulder-free' },
+    { ...CP.MC, why: 'METABOLIC — no lat compression' },
+  ],
+  // D5 HAMSTRINGS/GLUTES — posterior chain fatigued. Anterior leads, obliques balance, dead bugs recover.
+  5: [
+    { ...CP.DS, why: 'ANTERIOR CHAIN — posterior fatigue offset' },
+    { ...CP.OE, why: 'LATERAL BALANCE — week close' },
+    { ...CP.DB, why: 'RECOVERY ANCHOR — lowest CNS cost' },
+  ],
+};
+
+// ═══════════════════════════════════════════
+// WORKOUTS
+// ═══════════════════════════════════════════
+const DAY_SHORT = { 1:'PUSH', 2:'QUAD', 3:'POST', 4:'PULL', 5:'HAM' };
+
+const WO = {
+  1: {
+    label:'DAY 1', title:'PUSH',
+    warmup:'1mi run (8–10 min) · thoracic openers · shoulder CARs',
+    exercises:[
+      { name:'Bench Press',              note:'3–4s eccentric',        sets:[{s:1,r:'12',w:105},{s:2,r:'12',w:115},{s:3,r:'12',w:120},{s:4,r:'10',w:135}] },
+      { name:'DB Bench Press',           note:'3s eccentric',          sets:[{s:1,r:'12',w:40},{s:2,r:'12',w:40},{s:3,r:'10',w:45},{s:4,r:'10',w:47.5}] },
+      { name:'Incline DB Press',         note:'3s eccentric',          sets:[{s:1,r:'12',w:30},{s:2,r:'12',w:35},{s:3,r:'10',w:40}] },
+      { name:'Seated DB Shoulder Press', note:'full ROM',              sets:[{s:1,r:'12',w:35},{s:2,r:'12',w:35},{s:3,r:'10',w:35}] },
+      { name:'Cable Lateral Raises',     note:'slow · no swing',       sets:[{s:1,r:'12',w:12.5},{s:2,r:'12',w:12.5},{s:3,r:'10',w:12.5}] },
+      { name:'Cable Dips',               note:'full stretch at bottom',sets:[{s:1,r:'12',w:'27.5a'},{s:2,r:'12',w:'27.5a'},{s:3,r:'10',w:'27.5a'}] },
+      { name:'Triceps Pushdown',         note:'elbows locked',         sets:[{s:1,r:'12',w:33},{s:2,r:'12',w:38.5},{s:3,r:'10',w:38.5}] },
+      { name:'Triceps Burnout',          note:'drop to failure',       sets:[{s:1,r:'15+',w:13},{s:2,r:'15+',w:13},{s:3,r:'15+',w:13}] },
+      { name:'Cardio', note:'zone 3–4',  sets:[{s:null,r:'20 min',w:'choice'}], isStatic:true },
+    ],
+    finisher: null,
+  },
+  2: {
+    label:'DAY 2', title:'QUADS & GLUTES',
+    warmup:'foam roll 40s · banded monster walks · hip flexor stretch',
+    exercises:[
+      { name:'Pendulum Squat',        note:'3s eccentric', isPendulum:true,
+        sets:[{s:1,r:'12',w:90},{s:2,r:'10',w:100},{s:3,r:'8',w:115},{s:4,r:'8',w:125}] },
+      { name:'Leg Press',             note:'narrow · 3s eccentric',  sets:[{s:1,r:'10',w:205},{s:2,r:'10',w:240},{s:3,r:'8',w:260},{s:4,r:'8',w:280}] },
+      { name:'Bulgarian Split Squat', note:'SUPERSET ↓ · 8–10 ea',  sets:[{s:1,r:'10ea',w:20},{s:2,r:'10ea',w:20},{s:3,r:'8ea',w:20}] },
+      { name:'Walking Lunges',        note:'SUPERSET ↑ · stay low',  sets:[{s:1,r:'10ea',w:10},{s:2,r:'10ea',w:10},{s:3,r:'10ea',w:10}] },
+      { name:'Quad Extension',        note:'2s hold · 4s eccentric', sets:[{s:1,r:'12',w:70},{s:2,r:'12',w:80},{s:3,r:'10',w:90},{s:4,r:'10',w:100}] },
+      { name:'Standing Calf Raise',   note:'full stretch',           sets:[{s:1,r:'15',w:'+25'},{s:2,r:'15',w:'+37'},{s:3,r:'12',w:'+37'},{s:4,r:'12',w:'+37'}] },
+    ],
+    finisher: null,
+  },
+  3: {
+    label:'DAY 3', title:'POSTERIOR CHAIN',
+    warmup:'1mi run · foam roll glutes/hams · hip flexor stretch',
+    exercises:[
+      { name:'Barbell Deadlift',   note:'3s eccentric · brace hard', sets:[{s:1,r:'10',w:135},{s:2,r:'10',w:155},{s:3,r:'8',w:185},{s:4,r:'8',w:205}] },
+      { name:'Cable Pull-Through', note:'hip hinge · not squat',     sets:[{s:1,r:'12',w:44},{s:2,r:'12',w:55},{s:3,r:'12',w:60},{s:4,r:'12',w:65}] },
+      { name:'Hamstring Curl',     note:'10s hold first rep',        sets:[{s:1,r:'12',w:70},{s:2,r:'12',w:80},{s:3,r:'10',w:90}] },
+      { name:'KB Swings',          note:'hip drive · not squat',     sets:[{s:1,r:'12',w:35},{s:2,r:'12',w:44},{s:3,r:'12',w:62}] },
+      { name:'Assisted Pull-Ups',  note:'full hang · full pull',     sets:[{s:1,r:'10',w:'100a'},{s:2,r:'10',w:'100a'},{s:3,r:'10',w:'100a'}] },
+    ],
+    finisher:'Sled Push — +90 lb · 4 × 20 yds',
+  },
+  4: {
+    label:'DAY 4', title:'PULL',
+    warmup:'thoracic openers · band pull-aparts · dead hangs 30s',
+    exercises:[
+      { name:'Barbell Row',       note:'4×10 · chest→bar · 3s lower', sets:[{s:1,r:'10',w:95},{s:2,r:'10',w:120},{s:3,r:'10',w:120},{s:4,r:'10',w:125}] },
+      { name:'Assisted Pull-Ups', note:'full ROM',                     sets:[{s:1,r:'10',w:'100a'},{s:2,r:'10',w:'100a'},{s:3,r:'10',w:'100a'},{s:4,r:'10',w:'100a'}] },
+      { name:'Lat Pulldown',      note:'3s eccentric · full stretch',  sets:[{s:1,r:'12',w:88},{s:2,r:'12',w:88},{s:3,r:'12',w:88}] },
+      { name:'SA Lat Pulldown',   note:'3s eccentric',                 sets:[{s:1,r:'12',w:33},{s:2,r:'10',w:44},{s:3,r:'10',w:44}] },
+      { name:'Cable Row',         note:'elbows tight · 3s lower',     sets:[{s:1,r:'12',w:66},{s:2,r:'12',w:77},{s:3,r:'10',w:88}] },
+      { name:'Face Pull',         note:'ext. rotation at finish',     sets:[{s:1,r:'15',w:38},{s:2,r:'12',w:45},{s:3,r:'12',w:49.5}] },
+      { name:'Rear Delt Fly',     note:'no momentum',                 sets:[{s:1,r:'15',w:65},{s:2,r:'12',w:75},{s:3,r:'12',w:80}] },
+      { name:'EZ Bar Curl',       note:'full supination · slow',      sets:[{s:1,r:'12',w:50},{s:2,r:'10',w:50},{s:3,r:'10',w:50}] },
+      { name:'Hammer Curl',       note:'neutral · no swing',          sets:[{s:1,r:'12',w:20},{s:2,r:'10',w:20},{s:3,r:'10',w:20}] },
+    ],
+    finisher:'Cardio — 20 min Zone 4',
+  },
+  5: {
+    label:'DAY 5', title:'HAMSTRINGS & GLUTES',
+    warmup:'foam roll · banded hip abduction · hip flexor stretch',
+    exercises:[
+      { name:'Romanian Deadlift',      note:'B-stance · 3s eccentric',  sets:[{s:1,r:'10',w:45},{s:2,r:'10',w:95},{s:3,r:'10',w:135},{s:4,r:'10',w:155},{s:5,r:'8',w:185}] },
+      { name:'Hip Thrust',             note:'1s pause top · 3s down',   sets:[{s:1,r:'12',w:'+90'},{s:2,r:'10',w:'+140'},{s:3,r:'8',w:'+160'},{s:4,r:'8',w:'+180'}] },
+      { name:'Hamstring Curl Burnout', note:'10s hold first · drop set',sets:[{s:1,r:'27',w:80},{s:2,r:'15',w:90},{s:3,r:'15',w:100}] },
+      { name:'Adductor Press',         note:'10s hold first rep',       sets:[{s:1,r:'15',w:70},{s:2,r:'15',w:80},{s:3,r:'12',w:90}] },
+    ],
+    finisher: null,
+  },
+};
+
+// ═══════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════
+let state      = loadState();
+let curTab     = 'workout';
+let curDay     = 1;
+let doneToday  = {};
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let toastTmr;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function showTab(tab) {
+  curTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  render();
+}
+
+function setDay(d) {
+  curDay = d;
+  doneToday = {};
+  render();
+}
+
+// ═══════════════════════════════════════════
+// RENDER DISPATCH
+// ═══════════════════════════════════════════
+function render() {
+  document.getElementById('body').innerHTML =
+    curTab === 'workout' ? renderWorkout() :
+    curTab === 'log'     ? renderLog()     :
+                           renderSync();
+  if (curTab === 'sync') bindSyncEvents();
+}
+
+// ═══════════════════════════════════════════
+// RENDER — WORKOUT
+// ═══════════════════════════════════════════
+function renderWorkout() {
+  const w = WO[curDay];
+  const hasPend = w.exercises.some(e => e.isPendulum);
+  let h = '';
+
+  // Day picker
+  h += '<div id="day-picker">';
+  for (let d = 1; d <= 5; d++) {
+    h += `<button class="day-btn${d===curDay?' active':''}" onclick="setDay(${d})">
+      <span class="d-num">D${d}</span>
+      <span class="d-label">${DAY_SHORT[d]}</span>
+    </button>`;
+  }
+  h += '</div>';
+
+  // Warmup
+  h += `<div class="card">
+    <div class="card-hdr" style="color:var(--muted)">⚡ WARMUP</div>
+    <div class="warmup-body">${w.warmup}</div>
+  </div>`;
+
+  // Exercises
+  h += `<div class="card">
+    <div class="card-hdr">
+      EXERCISES
+      <span class="card-hdr-sub">TAP ✓ DONE → WEIGHT BUMPS NEXT SESSION</span>
+    </div>`;
+
+  w.exercises.forEach((ex, i) => {
+    const done   = !!doneToday[ex.name];
+    const steps  = state[ex.name] || 0;
+    const canPrg = !!PROG[ex.name] && !ex.isStatic;
+    const sets   = applySteps(ex.sets, ex.name, steps);
+
+    h += `<div class="ex-row${done?' done':''}" id="er${i}">`;
+
+    // Name row
+    h += `<div class="ex-top">
+      <span class="ex-name">${ex.name}</span>
+      <div style="display:flex;gap:5px;align-items:center">
+        <span class="ex-note">${ex.note}</span>`;
+    if (canPrg) {
+      h += `<button class="done-btn${done?' marked':''}" onclick="toggleDone('${ex.name.replace(/'/g,"\\'")}')">
+        ${done ? '✓ DONE' : '✓ DONE'}
+      </button>`;
+    }
+    h += `</div></div>`;
+
+    // Set tiles
+    h += '<div class="set-tiles">';
+    sets.forEach(s => {
+      const plates = typeof s.w === 'number' ? s.w : parseFloat(s.w);
+      const tru    = ex.isPendulum && !isNaN(plates) ? pendTrue(plates) : null;
+      h += `<div class="tile">`;
+      if (s.s)  h += `<span class="t-set">S${s.s}</span>`;
+      h += `<span class="t-wt">${s.w}</span>`;
+      if (tru)  h += `<span class="t-true">(${tru})</span>`;
+      h += `<span class="t-rep">${s.r}</span></div>`;
+    });
+    h += '</div>';
+
+    if (steps > 0) h += `<div class="prog-tag">↑ ${steps}× from base</div>`;
+    h += '</div>';
+  });
+  h += '</div>'; // close exercises card
+
+  // Pendulum legend
+  if (hasPend) {
+    h += `<div class="pend-legend">
+      <span class="pl-tag">🔸 PENDULUM</span>
+      <span class="pl-desc">plates shown · <span style="color:var(--amber)">(true load)</span> = plates × 1.5 + 90 lb sled</span>
+    </div>`;
+  }
+
+  // Core superset
+  const core = DAY_CORE[curDay];
+  h += `<div class="core-card">
+    <div class="core-hdr">
+      💪 CORE SUPERSET
+      <span class="core-hdr-sub">3 ROUNDS · 30s REST BETWEEN</span>
+    </div>`;
+  core.forEach((c, ci) => {
+    h += `<div class="core-move">
+      <span class="core-idx">${ci+1}.</span>
+      <div class="core-body">
+        <div class="core-name">${c.label}</div>
+        <div class="core-detail">${c.detail}</div>
+        <div class="core-why">${c.why}</div>
+      </div>
+    </div>`;
+  });
+  h += '</div>';
+
+  // Finisher
+  if (w.finisher) {
+    h += `<div class="finisher-card">
+      <div class="finisher-lbl">🔥 FINISHER</div>
+      <div class="finisher-txt">${w.finisher}</div>
+    </div>`;
+  }
+
+  // Rest footer
+  h += `<div class="card">
+    <div class="rest-row">
+      <span>COMPOUND: 2–3 MIN REST</span>
+      <span>ACCESSORY: 60–90 SEC</span>
+    </div>
+  </div>`;
+
+  return h;
+}
+
+// ═══════════════════════════════════════════
+// RENDER — PROGRESS LOG
+// ═══════════════════════════════════════════
+function renderLog() {
+  const entries = Object.keys(state).filter(k => state[k] > 0);
+  let h = `<div class="card">
+    <div class="card-hdr">PROGRESSION LOG</div>`;
+
+  if (entries.length === 0) {
+    h += `<div class="log-empty">
+      No progressions yet.<br>
+      <span style="color:var(--done-text)">✓ DONE</span> when all sets hit target reps —<br>
+      weight advances automatically next session.
+    </div>`;
+  } else {
+    entries.forEach(name => {
+      const ct = state[name];
+      h += `<div class="log-row">
+        <div>
+          <div class="log-name">${name}</div>
+          <div class="log-ct">↑ ${ct} progression${ct>1?'s':''} applied</div>
+        </div>
+        <button class="reset-btn" onclick="hardReset('${name.replace(/'/g,"\\'")}')">RESET</button>
+      </div>`;
+    });
+  }
+
+  h += `<div style="padding:6px 11px;border-top:1px solid var(--border);font-size:7px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase">
+    Persists across sessions · Reset restores base weights
+  </div></div>`;
+  return h;
+}
+
+// ═══════════════════════════════════════════
+// RENDER — SYNC (Export / Import)
+// ═══════════════════════════════════════════
+function renderSync() {
+  const blob = JSON.stringify(state);
+  const count = Object.keys(state).filter(k => state[k] > 0).length;
+
+  return `
+  <div class="export-card">
+    <div class="export-hdr">📤 EXPORT STATE</div>
+    <div class="export-body">
+      <div class="export-desc">
+        Copy this blob and paste it into Claude when requesting a program update.
+        Your progression history (${count} exercise${count!==1?'s':''}) will be baked into the new file.
+      </div>
+      <div class="export-blob" id="blob-display">${blob === '{}' ? '(no progressions recorded yet)' : blob}</div>
+      <div class="action-row">
+        <button class="act-btn primary" onclick="copyBlob()">COPY TO CLIPBOARD</button>
+        <button class="act-btn" onclick="shareBlob()">SHARE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="export-card">
+    <div class="export-hdr">📥 IMPORT STATE</div>
+    <div class="export-body">
+      <div class="export-desc">
+        Paste a previously exported blob here to restore progression history after a file update from Claude.
+      </div>
+      <textarea class="import-area" id="import-field" placeholder='{"Bench Press":2,"Deadlift":1,...}'></textarea>
+      <div class="action-row">
+        <button class="act-btn primary" onclick="importBlob()">IMPORT & APPLY</button>
+        <button class="act-btn" onclick="clearImport()">CLEAR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="padding:10px 11px;font-size:7.5px;color:var(--muted);line-height:1.8;letter-spacing:.04em">
+      <strong style="color:var(--accent2)">HOW TO UPDATE YOUR PROGRAM</strong><br>
+      1. Tap COPY above to grab your state<br>
+      2. Upload Geraldine's new plan to Claude<br>
+      3. Paste the blob and say "update with my progression state"<br>
+      4. Download the new workout.html and push to GitHub<br>
+      5. Paste the blob back here via IMPORT on first open
+    </div>
+  </div>`;
+}
+
+function bindSyncEvents() { /* event handlers inline via onclick */ }
+
+function copyBlob() {
+  const blob = JSON.stringify(state);
+  if (blob === '{}') { showToast('Nothing to export yet'); return; }
+  navigator.clipboard.writeText(blob).then(() => {
+    showToast('✓ Copied to clipboard');
+  }).catch(() => {
+    // fallback: select the text
+    const el = document.getElementById('blob-display');
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    showToast('Select + copy the text above');
+  });
+}
+
+function shareBlob() {
+  const blob = JSON.stringify(state);
+  if (blob === '{}') { showToast('Nothing to share yet'); return; }
+  if (navigator.share) {
+    navigator.share({ title: 'Sullivan Lift State', text: blob })
+      .catch(() => {});
+  } else {
+    copyBlob();
+  }
+}
+
+function importBlob() {
+  const raw = document.getElementById('import-field').value.trim();
+  if (!raw) { showToast('Paste a blob first'); return; }
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
+    state = parsed;
+    saveState(state);
+    showToast('✓ State imported — ' + Object.keys(state).filter(k=>state[k]>0).length + ' exercises restored');
+    document.getElementById('import-field').value = '';
+    render();
+  } catch {
+    showToast('Invalid blob — check format');
+  }
+}
+
+function clearImport() {
+  const f = document.getElementById('import-field');
+  if (f) f.value = '';
+}
+
+// ═══════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════
+function toggleDone(name) {
+  if (doneToday[name]) {
+    doneToday[name] = false;
+    state[name] = Math.max(0, (state[name] || 1) - 1);
+    if (state[name] === 0) delete state[name];
+    saveState(state);
+    showToast('↺ ' + name + ' — undone');
+  } else {
+    doneToday[name] = true;
+    state[name] = (state[name] || 0) + 1;
+    saveState(state);
+    showToast('✓ ' + name + ' — weight bumped next session');
+  }
+  render();
+}
+
+function hardReset(name) {
+  delete state[name];
+  delete doneToday[name];
+  saveState(state);
+  showToast('↺ ' + name + ' — reset to base');
+  render();
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
