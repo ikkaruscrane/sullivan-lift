@@ -1,23 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="Sullivan Lift"/>
-<title>Sullivan Lift</title>
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sullivan Lift</title>
+  <style>
   :root {
-    /* ── Teal/green palette ── */
     --bg:         #060a09;
     --card:       #0b100e;
     --card2:      #0f1612;
     --border:     #162018;
     --border2:    #1c2a20;
-    --accent:     #00e5a0;   /* primary teal */
-    --accent2:    #00b87e;   /* deeper teal */
-    --accent3:    #00ffc8;   /* bright highlight */
+    --accent:     #00e5a0;
+    --accent2:    #00b87e;
+    --accent3:    #00ffc8;
     --text:       #d8ede6;
     --muted:      #304840;
     --dim:        #111a14;
@@ -152,6 +148,16 @@
   .tile .t-rep  { font-size: 7.5px; color: var(--muted); line-height: 1.2; }
   .prog-tag { margin-top: 4px; font-size: 7.5px; color: var(--done-text); opacity: .4; letter-spacing: .04em; }
 
+  /* ── EXPLOSIVE TAG ── */
+  .plyo-row {
+    background: var(--amber-bg); border: 1px solid var(--amber-bd);
+    border-radius: 3px; padding: 5px 10px; margin: 4px 0 2px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .plyo-tag { font-size: 7px; color: var(--amber); text-transform: uppercase; letter-spacing: .12em; white-space: nowrap; }
+  .plyo-name { font-size: 9px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .05em; }
+  .plyo-sets { font-size: 8px; color: #3a2a00; }
+
   /* ── PENDULUM LEGEND ── */
   .pend-legend {
     background: var(--amber-bg); border: 1px solid var(--amber-bd);
@@ -168,17 +174,18 @@
   }
   .core-hdr {
     padding: 7px 11px; font-size: 7.5px; font-weight: 700; color: var(--accent2);
-    letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--teal-bd);
+    letter-spacing: .14em; text-transform: uppercase;
+    border-bottom: 1px solid var(--teal-bd);
     display: flex; justify-content: space-between; align-items: center;
   }
-  .core-hdr-sub { font-size: 6.5px; color: var(--muted); font-weight: 400; letter-spacing: .08em; }
+  .core-hdr-sub { font-size: 6.5px; color: var(--teal-bd); letter-spacing: .06em; font-weight: 400; color: #0d3028; }
   .core-move {
-    display: flex; gap: 9px; padding: 8px 11px;
-    border-bottom: 1px solid var(--teal-bd); align-items: flex-start;
+    padding: 8px 11px; border-bottom: 1px solid var(--teal-bd);
+    display: flex; gap: 8px; align-items: flex-start;
   }
   .core-move:last-child { border-bottom: none; }
-  .core-idx { font-size: 8.5px; font-weight: 700; color: var(--accent2); min-width: 13px; padding-top: 1px; }
-  .core-body {}
+  .core-idx { font-size: 13px; font-weight: 700; color: #0d3028; flex-shrink: 0; line-height: 1; }
+  .core-body { flex: 1; }
   .core-name { font-size: 9.5px; font-weight: 700; color: var(--accent2); text-transform: uppercase; letter-spacing: .06em; }
   .core-detail { font-size: 8px; color: #1a4035; margin-top: 2px; line-height: 1.45; }
   .core-why { font-size: 6.5px; color: var(--accent2); opacity: .35; letter-spacing: .08em; margin-top: 3px; text-transform: uppercase; }
@@ -222,8 +229,9 @@
     border-radius: var(--r); margin-bottom: 8px; overflow: hidden;
   }
   .export-hdr {
-    padding: 7px 11px; font-size: 7.5px; font-weight: 700; color: var(--accent2);
-    letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--border2);
+    padding: 7px 11px; font-size: 7.5px; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; border-bottom: 1px solid var(--border2);
+    color: var(--accent2);
   }
   .export-body { padding: 10px 11px; display: flex; flex-direction: column; gap: 8px; }
   .export-desc { font-size: 8px; color: var(--muted); line-height: 1.6; }
@@ -244,9 +252,9 @@
   .import-area {
     background: var(--row); border: 1px solid var(--border2); border-radius: 3px;
     padding: 8px; font-size: 8px; color: var(--text); font-family: var(--font);
-    width: 100%; resize: none; height: 70px; outline: none; letter-spacing: .02em;
+    width: 100%; min-height: 70px; resize: vertical; outline: none;
+    letter-spacing: .02em; line-height: 1.5;
   }
-  .import-area:focus { border-color: var(--accent2); }
 
   /* ── TOAST ── */
   #toast {
@@ -261,21 +269,21 @@
 
   /* ── DIVIDER ── */
   .divider { height: 1px; background: var(--border); margin: 2px 0 8px; }
-</style>
+  </style>
 </head>
 <body>
 <div id="app">
   <div id="header">
     <div id="hdr-left">
-      <span id="hdr-title">SULLIVAN LIFT</span>
-      <span id="hdr-sub">175 LB · REPS → WEIGHT</span>
+      <div id="hdr-title">SULLIVAN LIFT</div>
+      <div id="hdr-sub">CONTRAST / EXPLOSIVE · 5-DAY SPLIT</div>
     </div>
-    <div id="hdr-right">COWBOYS FIT<br>5-DAY SPLIT</div>
+    <div id="hdr-right">Workout Progress<br>Sync</div>
   </div>
   <div id="tabs">
-    <button class="tab-btn active" onclick="showTab('workout')" id="tab-workout">Workout</button>
-    <button class="tab-btn" onclick="showTab('log')"     id="tab-log">Progress</button>
-    <button class="tab-btn" onclick="showTab('sync')"    id="tab-sync">Sync</button>
+    <button class="tab-btn active" id="tab-workout" onclick="showTab('workout')">Workout</button>
+    <button class="tab-btn" id="tab-log" onclick="showTab('log')">Progress</button>
+    <button class="tab-btn" id="tab-sync" onclick="showTab('sync')">Sync</button>
   </div>
   <div id="body"></div>
 </div>
@@ -285,50 +293,42 @@
 // ═══════════════════════════════════════════
 // STORAGE
 // ═══════════════════════════════════════════
-const SK = 'sullivan_wk_v4';
+const SK = 'sullivan_wk_v5';
 function loadState() { try { return JSON.parse(localStorage.getItem(SK) || '{}'); } catch { return {}; } }
 function saveState(s) { try { localStorage.setItem(SK, JSON.stringify(s)); } catch {} }
 
 // ═══════════════════════════════════════════
-// PENDULUM
-// ═══════════════════════════════════════════
-function pendTrue(plates) { return Math.round(plates * 1.5 + 90); }
-
-// ═══════════════════════════════════════════
 // PROGRESSION MAP
-// ═══════════════════════════════════════════
+// ═════════════════════════════════════════
 const PROG = {
-  'Bench Press':              { step: 5   },
-  'DB Bench Press':           { step: 2.5 },
-  'Incline DB Press':         { step: 2.5 },
-  'Seated DB Shoulder Press': { step: 2.5 },
-  'Cable Lateral Raises':     { step: 2.5 },
-  'Cable Dips':               { step: -5  },
-  'Triceps Pushdown':         { step: 5   },
-  'Triceps Burnout':          { step: 2   },
-  'Pendulum Squat':           { step: 10  },
-  'Leg Press':                { step: 20  },
-  'Bulgarian Split Squat':    { step: 5   },
-  'Walking Lunges':           { step: 5   },
-  'Quad Extension':           { step: 10  },
-  'Standing Calf Raise':      { step: 10  },
-  'Barbell Deadlift':         { step: 10  },
-  'Cable Pull-Through':       { step: 5   },
-  'Hamstring Curl':           { step: 10  },
-  'KB Swings':                { step: 9   },
-  'Assisted Pull-Ups':        { step: -10 },
-  'Barbell Row':              { step: 5   },
-  'Lat Pulldown':             { step: 10  },
-  'SA Lat Pulldown':          { step: 5   },
-  'Cable Row':                { step: 10  },
-  'Face Pull':                { step: 5   },
-  'Rear Delt Fly':            { step: 5   },
-  'EZ Bar Curl':              { step: 5   },
-  'Hammer Curl':              { step: 5   },
-  'Romanian Deadlift':        { step: 10  },
-  'Hip Thrust':               { step: 20  },
-  'Hamstring Curl Burnout':   { step: 10  },
-  'Adductor Press':           { step: 5   },
+  'Incline DB Bench Press':       { step: 2.5 },
+  'Smith Machine Shoulder Press': { step: 2.5 },
+  'Cable Lateral Raises':         { step: 2.5 },
+  'Overhead Triceps Extension':   { step: 2.5 },
+  'Dips (Chest Lean)':            { step: 2.5 },
+  'Belt Squat':                   { step: 5 },
+  'Leg Press':                    { step: 10 },
+  'Bulgarian Split Squats':       { step: 2.5 },
+  'Leg Extensions':               { step: 5 },
+  'Calf Raises':                  { step: 5 },
+  'Weighted Pull-Ups':            { step: 2.5 },
+  'Barbell Rows':                 { step: 5 },
+  'Single Arm Lat Pulldown':      { step: 5 },
+  'Face Pulls':                   { step: 2.5 },
+  'Rear Delt Flys':               { step: 2.5 },
+  'EZ Bar Curls':                 { step: 5 },
+  'Hammer Curls':                 { step: 2.5 },
+  'DB Bench Press':               { step: 2.5 },
+  'Chest Dips':                   { step: 2.5 },
+  'Arnold Press':                 { step: 2.5 },
+  'Lateral Raises':               { step: 2.5 },
+  'Triceps Pushdowns':            { step: 5 },
+  'DB Curls':                     { step: 2.5 },
+  'Romanian Deadlift':            { step: 5 },
+  'Hip Thrusts':                  { step: 10 },
+  'SL Step-Ups':                  { step: 2.5 },
+  'Hamstring Curls':              { step: 5 },
+  'Adductor Machine':             { step: 5 },
 };
 
 function bumpW(w, step) {
@@ -339,11 +339,10 @@ function bumpW(w, step) {
   }
   return w;
 }
-
 function applySteps(sets, name, steps) {
   if (!steps || !PROG[name]) return sets;
   return sets.map(s => {
-    if (s.w === '—' || s.w === 'BW' || s.w === 'choice') return s;
+    if (s.w === '—' || s.w === 'BW' || s.w === 'choice' || s.w === 'EXPL') return s;
     let w = s.w;
     for (let i = 0; i < steps; i++) w = bumpW(w, PROG[name].step);
     return { ...s, w };
@@ -354,40 +353,34 @@ function applySteps(sets, name, steps) {
 // CORE POOL + DAY SELECTIONS
 // ═══════════════════════════════════════════
 const CP = {
-  MC: { label: 'MOUNTAIN CLIMBERS',       detail: '30 reps · slow drive · brace full set · no hip hike' },
-  DB: { label: 'DEAD BUGS',               detail: '10 ea · exhale on extend · press lumbar flat · slow' },
-  BC: { label: 'BICYCLE CRUNCHES',        detail: '20 contra · full rotation · elbow past knee · no neck pull' },
-  OE: { label: 'OBLIQUE WEIGHTED EXT.',   detail: '12 ea · 25 lb plate · 2s pause at stretch · ribs down' },
-  DS: { label: 'WEIGHTED DECLINE SITUP',  detail: '12 reps · 25 lb plate · 3s eccentric · full ROM' },
+  MC: { label: 'MOUNTAIN CLIMBERS',      detail: '30 reps · slow drive · brace full set · no hip hike' },
+  DB: { label: 'DEAD BUGS',              detail: '10 ea · exhale on extend · press lumbar flat · slow' },
+  BC: { label: 'BICYCLE CRUNCHES',       detail: '20 contra · full rotation · elbow past knee · no neck pull' },
+  OE: { label: 'OBLIQUE WEIGHTED EXT.',  detail: '12 ea · 25 lb plate · 2s pause at stretch · ribs down' },
+  DS: { label: 'WEIGHTED DECLINE SITUP', detail: '12 reps · 25 lb plate · 3s eccentric · full ROM' },
 };
 
-// Rationale: ordered by CNS/mechanical fit to day's focus
 const DAY_CORE = {
-  // D1 PUSH — fresh CNS, anterior shoulder loaded. Anti-extension first, then rotational, metabolic last.
   1: [
     { ...CP.DB, why: 'ANTI-EXTENSION — reinforce bracing post-press' },
     { ...CP.BC, why: 'ROTATIONAL — shoulder-free' },
     { ...CP.MC, why: 'METABOLIC CLOSE' },
   ],
-  // D2 QUADS/GLUTES — sagittal overload, hip flexors taxed. Lateral chain leads, then metabolic, hip-flexor unload last.
   2: [
     { ...CP.OE, why: 'LATERAL CHAIN — offset sagittal dominance' },
     { ...CP.MC, why: 'METABOLIC — hip flexors pre-fatigued = natural control' },
     { ...CP.DB, why: 'HIP FLEXOR UNLOAD — lumbar flat cue' },
   ],
-  // D3 POSTERIOR CHAIN — peak CNS (deadlifts). Mirror deadlift brace, then anterior balance, rotational recovery.
   3: [
-    { ...CP.DB, why: 'DEADLIFT BRACE REINFORCEMENT' },
-    { ...CP.DS, why: 'ANTERIOR BALANCE — offset posterior dominance' },
-    { ...CP.BC, why: 'ROTATIONAL RECOVERY' },
-  ],
-  // D4 PULL — scapular/lat dominant. Rotational synergy first, lateral chain, metabolic close.
-  4: [
     { ...CP.BC, why: 'ROTATIONAL — lat activation synergy' },
     { ...CP.OE, why: 'LATERAL CHAIN — shoulder-free' },
     { ...CP.MC, why: 'METABOLIC — no lat compression' },
   ],
-  // D5 HAMSTRINGS/GLUTES — posterior chain fatigued. Anterior leads, obliques balance, dead bugs recover.
+  4: [
+    { ...CP.DB, why: 'ANTI-EXTENSION — reinforce bracing post-press' },
+    { ...CP.BC, why: 'ROTATIONAL — shoulder-free' },
+    { ...CP.MC, why: 'METABOLIC CLOSE' },
+  ],
   5: [
     { ...CP.DS, why: 'ANTERIOR CHAIN — posterior fatigue offset' },
     { ...CP.OE, why: 'LATERAL BALANCE — week close' },
@@ -398,75 +391,104 @@ const DAY_CORE = {
 // ═══════════════════════════════════════════
 // WORKOUTS
 // ═══════════════════════════════════════════
-const DAY_SHORT = { 1:'PUSH', 2:'QUAD', 3:'POST', 4:'PULL', 5:'HAM' };
+const DAY_SHORT = { 1:'PUSH', 2:'QUAD', 3:'PULL', 4:'PUSH', 5:'HAM' };
 
 const WO = {
   1: {
-    label:'DAY 1', title:'PUSH',
-    warmup:'1mi run (8–10 min) · thoracic openers · shoulder CARs',
-    exercises:[
-      { name:'Bench Press',              note:'3–4s eccentric',        sets:[{s:1,r:'12',w:105},{s:2,r:'12',w:115},{s:3,r:'12',w:120},{s:4,r:'10',w:135}] },
-      { name:'DB Bench Press',           note:'3s eccentric',          sets:[{s:1,r:'12',w:40},{s:2,r:'12',w:40},{s:3,r:'10',w:45},{s:4,r:'10',w:47.5}] },
-      { name:'Incline DB Press',         note:'3s eccentric',          sets:[{s:1,r:'12',w:30},{s:2,r:'12',w:35},{s:3,r:'10',w:40}] },
-      { name:'Seated DB Shoulder Press', note:'full ROM',              sets:[{s:1,r:'12',w:35},{s:2,r:'12',w:35},{s:3,r:'10',w:35}] },
-      { name:'Cable Lateral Raises',     note:'slow · no swing',       sets:[{s:1,r:'12',w:12.5},{s:2,r:'12',w:12.5},{s:3,r:'10',w:12.5}] },
-      { name:'Cable Dips',               note:'full stretch at bottom',sets:[{s:1,r:'12',w:'27.5a'},{s:2,r:'12',w:'27.5a'},{s:3,r:'10',w:'27.5a'}] },
-      { name:'Triceps Pushdown',         note:'elbows locked',         sets:[{s:1,r:'12',w:33},{s:2,r:'12',w:38.5},{s:3,r:'10',w:38.5}] },
-      { name:'Triceps Burnout',          note:'drop to failure',       sets:[{s:1,r:'15+',w:13},{s:2,r:'15+',w:13},{s:3,r:'15+',w:13}] },
-      { name:'Cardio', note:'zone 3–4',  sets:[{s:null,r:'20 min',w:'choice'}], isStatic:true },
+    label: 'DAY 1', title: 'PUSH — UPPER CHEST + EXPLOSIVE',
+    warmup: 'thoracic openers · shoulder CARs · band pull-aparts',
+    exercises: [
+      {
+        name: 'Incline DB Bench Press',
+        note: '4×8-10 · alt wk: Incline Bench Press',
+        sets: [{s:1,r:'10',w:35},{s:2,r:'10',w:40},{s:3,r:'8',w:45},{s:4,r:'8',w:47.5}],
+        plyo: { name: 'Band Assisted Push-Ups', sets: '4×5–8', note: 'explosive · full lockout' }
+      },
+      { name: 'Smith Machine Shoulder Press', note: '4×10-12 · full ROM',    sets: [{s:1,r:'12',w:35},{s:2,r:'12',w:40},{s:3,r:'10',w:45},{s:4,r:'10',w:45}] },
+      { name: 'Cable Lateral Raises',         note: '3×12 · slow · no swing', sets: [{s:1,r:'12',w:12.5},{s:2,r:'12',w:12.5},{s:3,r:'12',w:15}] },
+      { name: 'Overhead Triceps Extension',   note: '3×10-12',               sets: [{s:1,r:'12',w:40},{s:2,r:'12',w:45},{s:3,r:'10',w:50}] },
+      { name: 'Dips (Chest Lean)',            note: '2–3×10 · chest lean',   sets: [{s:1,r:'10',w:'BW'},{s:2,r:'10',w:'BW'},{s:3,r:'10',w:'BW'}] },
     ],
     finisher: null,
   },
   2: {
-    label:'DAY 2', title:'QUADS & GLUTES',
-    warmup:'foam roll 40s · banded monster walks · hip flexor stretch',
-    exercises:[
-      { name:'Pendulum Squat',        note:'3s eccentric', isPendulum:true,
-        sets:[{s:1,r:'12',w:90},{s:2,r:'10',w:100},{s:3,r:'8',w:115},{s:4,r:'8',w:125}] },
-      { name:'Leg Press',             note:'narrow · 3s eccentric',  sets:[{s:1,r:'10',w:205},{s:2,r:'10',w:240},{s:3,r:'8',w:260},{s:4,r:'8',w:280}] },
-      { name:'Bulgarian Split Squat', note:'SUPERSET ↓ · 8–10 ea',  sets:[{s:1,r:'10ea',w:20},{s:2,r:'10ea',w:20},{s:3,r:'8ea',w:20}] },
-      { name:'Walking Lunges',        note:'SUPERSET ↑ · stay low',  sets:[{s:1,r:'10ea',w:10},{s:2,r:'10ea',w:10},{s:3,r:'10ea',w:10}] },
-      { name:'Quad Extension',        note:'2s hold · 4s eccentric', sets:[{s:1,r:'12',w:70},{s:2,r:'12',w:80},{s:3,r:'10',w:90},{s:4,r:'10',w:100}] },
-      { name:'Standing Calf Raise',   note:'full stretch',           sets:[{s:1,r:'15',w:'+25'},{s:2,r:'15',w:'+37'},{s:3,r:'12',w:'+37'},{s:4,r:'12',w:'+37'}] },
+    label: 'DAY 2', title: 'QUADS & GLUTES — EXPLOSIVE',
+    warmup: 'SLED PUSH/PULL — 3 × 45 yd',
+    exercises: [
+      {
+        name: 'Belt Squat',
+        note: '4×5-8 · drive through floor',
+        sets: [{s:1,r:'8',w:90},{s:2,r:'8',w:100},{s:3,r:'6',w:115},{s:4,r:'5',w:125}],
+        plyo: { name: 'Box Jumps', sets: '4×3–5', note: 'fully explosive · stick landing' }
+      },
+      { name: 'Leg Press',             note: '4×12 · quad bias · narrow', sets: [{s:1,r:'12',w:200},{s:2,r:'12',w:230},{s:3,r:'12',w:260},{s:4,r:'12',w:280}] },
+      {
+        name: 'Bulgarian Split Squats',
+        note: '3×8 ea · SUPERSET ↓',
+        sets: [{s:1,r:'8ea',w:20},{s:2,r:'8ea',w:20},{s:3,r:'8ea',w:25}],
+        plyo: { name: 'Walking Lunges', sets: '3×10 ea', note: 'stay low · SUPERSET ↑' }
+      },
+      { name: 'Leg Extensions',  note: '3×12 · slow tempo · 2s hold', sets: [{s:1,r:'12',w:70},{s:2,r:'12',w:80},{s:3,r:'12',w:90}] },
+      { name: 'Calf Raises',     note: '3×15 · full stretch',          sets: [{s:1,r:'15',w:'+25'},{s:2,r:'15',w:'+35'},{s:3,r:'15',w:'+35'}] },
     ],
     finisher: null,
   },
   3: {
-    label:'DAY 3', title:'POSTERIOR CHAIN',
-    warmup:'1mi run · foam roll glutes/hams · hip flexor stretch',
-    exercises:[
-      { name:'Barbell Deadlift',   note:'3s eccentric · brace hard', sets:[{s:1,r:'10',w:135},{s:2,r:'10',w:155},{s:3,r:'8',w:185},{s:4,r:'8',w:205}] },
-      { name:'Cable Pull-Through', note:'hip hinge · not squat',     sets:[{s:1,r:'12',w:44},{s:2,r:'12',w:55},{s:3,r:'12',w:60},{s:4,r:'12',w:65}] },
-      { name:'Hamstring Curl',     note:'10s hold first rep',        sets:[{s:1,r:'12',w:70},{s:2,r:'12',w:80},{s:3,r:'10',w:90}] },
-      { name:'KB Swings',          note:'hip drive · not squat',     sets:[{s:1,r:'12',w:35},{s:2,r:'12',w:44},{s:3,r:'12',w:62}] },
-      { name:'Assisted Pull-Ups',  note:'full hang · full pull',     sets:[{s:1,r:'10',w:'100a'},{s:2,r:'10',w:'100a'},{s:3,r:'10',w:'100a'}] },
+    label: 'DAY 3', title: 'PULL — BACK / REAR DELTS / BICEPS + POWER',
+    warmup: 'dead hangs 30s · band pull-aparts · thoracic openers',
+    exercises: [
+      {
+        name: 'Weighted Pull-Ups',
+        note: '4×8-10 · full hang · full pull',
+        sets: [{s:1,r:'10',w:'100a'},{s:2,r:'10',w:'100a'},{s:3,r:'8',w:'90a'},{s:4,r:'8',w:'90a'}],
+        plyo: { name: 'Split Stance Med Ball Slams', sets: '4×8–10', note: 'explosive · full extension' }
+      },
+      { name: 'Barbell Rows',          note: '4×10,10,8,8 · chest→bar',       sets: [{s:1,r:'10',w:95},{s:2,r:'10',w:115},{s:3,r:'8',w:125},{s:4,r:'8',w:130}] },
+      { name: 'Single Arm Lat Pulldown', note: '3×12 · 3s eccentric',          sets: [{s:1,r:'12',w:33},{s:2,r:'12',w:40},{s:3,r:'12',w:44}] },
+      { name: 'Face Pulls',            note: '3×15 · ext. rotation at finish', sets: [{s:1,r:'15',w:35},{s:2,r:'15',w:40},{s:3,r:'15',w:45}] },
+      { name: 'Rear Delt Flys',        note: '3×12 · no momentum',             sets: [{s:1,r:'12',w:15},{s:2,r:'12',w:17.5},{s:3,r:'12',w:20}] },
+      { name: 'EZ Bar Curls',          note: '3×10-12 · full supination',      sets: [{s:1,r:'12',w:50},{s:2,r:'10',w:55},{s:3,r:'10',w:55}] },
+      { name: 'Hammer Curls',          note: '2–3×12 · neutral · no swing',    sets: [{s:1,r:'12',w:20},{s:2,r:'12',w:25},{s:3,r:'12',w:25}] },
     ],
-    finisher:'Sled Push — +90 lb · 4 × 20 yds',
+    finisher: null,
   },
   4: {
-    label:'DAY 4', title:'PULL',
-    warmup:'thoracic openers · band pull-aparts · dead hangs 30s',
-    exercises:[
-      { name:'Barbell Row',       note:'4×10 · chest→bar · 3s lower', sets:[{s:1,r:'10',w:95},{s:2,r:'10',w:120},{s:3,r:'10',w:120},{s:4,r:'10',w:125}] },
-      { name:'Assisted Pull-Ups', note:'full ROM',                     sets:[{s:1,r:'10',w:'100a'},{s:2,r:'10',w:'100a'},{s:3,r:'10',w:'100a'},{s:4,r:'10',w:'100a'}] },
-      { name:'Lat Pulldown',      note:'3s eccentric · full stretch',  sets:[{s:1,r:'12',w:88},{s:2,r:'12',w:88},{s:3,r:'12',w:88}] },
-      { name:'SA Lat Pulldown',   note:'3s eccentric',                 sets:[{s:1,r:'12',w:33},{s:2,r:'10',w:44},{s:3,r:'10',w:44}] },
-      { name:'Cable Row',         note:'elbows tight · 3s lower',     sets:[{s:1,r:'12',w:66},{s:2,r:'12',w:77},{s:3,r:'10',w:88}] },
-      { name:'Face Pull',         note:'ext. rotation at finish',     sets:[{s:1,r:'15',w:38},{s:2,r:'12',w:45},{s:3,r:'12',w:49.5}] },
-      { name:'Rear Delt Fly',     note:'no momentum',                 sets:[{s:1,r:'15',w:65},{s:2,r:'12',w:75},{s:3,r:'12',w:80}] },
-      { name:'EZ Bar Curl',       note:'full supination · slow',      sets:[{s:1,r:'12',w:50},{s:2,r:'10',w:50},{s:3,r:'10',w:50}] },
-      { name:'Hammer Curl',       note:'neutral · no swing',          sets:[{s:1,r:'12',w:20},{s:2,r:'10',w:20},{s:3,r:'10',w:20}] },
+    label: 'DAY 4', title: 'PUSH — LOWER CHEST + ARMS',
+    warmup: 'thoracic openers · shoulder CARs · band pull-aparts',
+    exercises: [
+      {
+        name: 'DB Bench Press',
+        note: '4×8-10 · 3s eccentric',
+        sets: [{s:1,r:'10',w:40},{s:2,r:'10',w:45},{s:3,r:'8',w:47.5},{s:4,r:'8',w:50}],
+        plyo: { name: 'MB Slams', sets: '4×5', note: 'explosive · full overhead reach' }
+      },
+      { name: 'Chest Dips',             note: '4×10 · chest lean · full stretch', sets: [{s:1,r:'10',w:'BW'},{s:2,r:'10',w:'BW'},{s:3,r:'10',w:'BW'},{s:4,r:'10',w:'BW'}] },
+      { name: 'Arnold Press',           note: '3×10 · full rotation',            sets: [{s:1,r:'10',w:30},{s:2,r:'10',w:35},{s:3,r:'10',w:35}] },
+      { name: 'Lateral Raises',         note: '3×12 · slow · controlled',        sets: [{s:1,r:'12',w:12.5},{s:2,r:'12',w:12.5},{s:3,r:'12',w:15}] },
+      { name: 'Triceps Pushdowns',      note: '3×12 · elbows locked',            sets: [{s:1,r:'12',w:35},{s:2,r:'12',w:40},{s:3,r:'12',w:45}] },
+      {
+        name: 'DB Curls',
+        note: '3×12 · full supination · SUPERSET ↓',
+        sets: [{s:1,r:'12',w:25},{s:2,r:'12',w:27.5},{s:3,r:'12',w:30}],
+        plyo: { name: 'Rope Hammer Curls', sets: '3×45 sec', note: 'controlled burn · SUPERSET ↑' }
+      },
     ],
-    finisher:'Cardio — 20 min Zone 4',
+    finisher: null,
   },
   5: {
-    label:'DAY 5', title:'HAMSTRINGS & GLUTES',
-    warmup:'foam roll · banded hip abduction · hip flexor stretch',
-    exercises:[
-      { name:'Romanian Deadlift',      note:'B-stance · 3s eccentric',  sets:[{s:1,r:'10',w:45},{s:2,r:'10',w:95},{s:3,r:'10',w:135},{s:4,r:'10',w:155},{s:5,r:'8',w:185}] },
-      { name:'Hip Thrust',             note:'1s pause top · 3s down',   sets:[{s:1,r:'12',w:'+90'},{s:2,r:'10',w:'+140'},{s:3,r:'8',w:'+160'},{s:4,r:'8',w:'+180'}] },
-      { name:'Hamstring Curl Burnout', note:'10s hold first · drop set',sets:[{s:1,r:'27',w:80},{s:2,r:'15',w:90},{s:3,r:'15',w:100}] },
-      { name:'Adductor Press',         note:'10s hold first rep',       sets:[{s:1,r:'15',w:70},{s:2,r:'15',w:80},{s:3,r:'12',w:90}] },
+    label: 'DAY 5', title: 'HAMSTRINGS & GLUTES — EXPLOSIVE',
+    warmup: 'SLED PUSH/PULL — 3 × 45 yd',
+    exercises: [
+      {
+        name: 'Romanian Deadlift',
+        note: '4×8-10 · 3s eccentric · hip hinge',
+        sets: [{s:1,r:'10',w:95},{s:2,r:'10',w:135},{s:3,r:'8',w:155},{s:4,r:'8',w:175}],
+        plyo: { name: 'Broad Jumps', sets: '4×5', note: 'explosive · full extension · stick landing' }
+      },
+      { name: 'Hip Thrusts',    note: '4×10 · 10s hold at top',       sets: [{s:1,r:'10',w:'+90'},{s:2,r:'10',w:'+135'},{s:3,r:'10',w:'+155'},{s:4,r:'10',w:'+175'}] },
+      { name: 'SL Step-Ups',    note: '3×10 ea · glute bias',         sets: [{s:1,r:'10ea',w:20},{s:2,r:'10ea',w:25},{s:3,r:'10ea',w:30}] },
+      { name: 'Hamstring Curls',note: '3×12 · slow eccentric',        sets: [{s:1,r:'12',w:70},{s:2,r:'12',w:80},{s:3,r:'12',w:90}] },
+      { name: 'Adductor Machine',note: '3×15 · 10s hold first rep',   sets: [{s:1,r:'15',w:70},{s:2,r:'15',w:80},{s:3,r:'15',w:90}] },
     ],
     finisher: null,
   },
@@ -475,10 +497,10 @@ const WO = {
 // ═══════════════════════════════════════════
 // APP STATE
 // ═══════════════════════════════════════════
-let state      = loadState();
-let curTab     = 'workout';
-let curDay     = 1;
-let doneToday  = {};
+let state = loadState();
+let curTab = 'workout';
+let curDay = 1;
+let doneToday = {};
 
 // ═══════════════════════════════════════════
 // TOAST
@@ -501,12 +523,7 @@ function showTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   render();
 }
-
-function setDay(d) {
-  curDay = d;
-  doneToday = {};
-  render();
-}
+function setDay(d) { curDay = d; doneToday = {}; render(); }
 
 // ═══════════════════════════════════════════
 // RENDER DISPATCH
@@ -514,8 +531,7 @@ function setDay(d) {
 function render() {
   document.getElementById('body').innerHTML =
     curTab === 'workout' ? renderWorkout() :
-    curTab === 'log'     ? renderLog()     :
-                           renderSync();
+    curTab === 'log'     ? renderLog()     : renderSync();
   if (curTab === 'sync') bindSyncEvents();
 }
 
@@ -524,7 +540,6 @@ function render() {
 // ═══════════════════════════════════════════
 function renderWorkout() {
   const w = WO[curDay];
-  const hasPend = w.exercises.some(e => e.isPendulum);
   let h = '';
 
   // Day picker
@@ -551,10 +566,10 @@ function renderWorkout() {
     </div>`;
 
   w.exercises.forEach((ex, i) => {
-    const done   = !!doneToday[ex.name];
-    const steps  = state[ex.name] || 0;
-    const canPrg = !!PROG[ex.name] && !ex.isStatic;
-    const sets   = applySteps(ex.sets, ex.name, steps);
+    const done = !!doneToday[ex.name];
+    const steps = state[ex.name] || 0;
+    const canPrg = !!PROG[ex.name];
+    const sets = applySteps(ex.sets, ex.name, steps);
 
     h += `<div class="ex-row${done?' done':''}" id="er${i}">`;
 
@@ -573,28 +588,28 @@ function renderWorkout() {
     // Set tiles
     h += '<div class="set-tiles">';
     sets.forEach(s => {
-      const plates = typeof s.w === 'number' ? s.w : parseFloat(s.w);
-      const tru    = ex.isPendulum && !isNaN(plates) ? pendTrue(plates) : null;
       h += `<div class="tile">`;
-      if (s.s)  h += `<span class="t-set">S${s.s}</span>`;
+      if (s.s) h += `<span class="t-set">S${s.s}</span>`;
       h += `<span class="t-wt">${s.w}</span>`;
-      if (tru)  h += `<span class="t-true">(${tru})</span>`;
       h += `<span class="t-rep">${s.r}</span></div>`;
     });
     h += '</div>';
 
+    // Explosive superset / plyo
+    if (ex.plyo) {
+      h += `<div class="plyo-row">
+        <span class="plyo-tag">⚡ EXPL</span>
+        <span class="plyo-name">${ex.plyo.name}</span>
+        <span class="plyo-sets">${ex.plyo.sets}</span>
+        <span class="ex-note" style="margin-left:auto">${ex.plyo.note}</span>
+      </div>`;
+    }
+
     if (steps > 0) h += `<div class="prog-tag">↑ ${steps}× from base</div>`;
     h += '</div>';
   });
-  h += '</div>'; // close exercises card
 
-  // Pendulum legend
-  if (hasPend) {
-    h += `<div class="pend-legend">
-      <span class="pl-tag">🔸 PENDULUM</span>
-      <span class="pl-desc">plates shown · <span style="color:var(--amber)">(true load)</span> = plates × 1.5 + 90 lb sled</span>
-    </div>`;
-  }
+  h += '</div>'; // close exercises card
 
   // Core superset
   const core = DAY_CORE[curDay];
@@ -623,11 +638,21 @@ function renderWorkout() {
     </div>`;
   }
 
-  // Rest footer
+  // Programming notes footer
   h += `<div class="card">
     <div class="rest-row">
       <span>COMPOUND: 2–3 MIN REST</span>
       <span>ACCESSORY: 60–90 SEC</span>
+    </div>
+  </div>`;
+
+  // Programming notes
+  h += `<div class="card" style="margin-bottom:16px">
+    <div class="card-hdr" style="color:var(--muted);font-size:7px">PROGRAMMING NOTES</div>
+    <div class="warmup-body" style="font-size:7.5px;line-height:2">
+      PLYOS PERFORMED IMMEDIATELY AFTER FIRST COMPOUND LIFT<br>
+      KEEP PLYO REPS LOW (3–8) AND FULLY EXPLOSIVE<br>
+      PROGRESS WEEKLY: ADD REPS FIRST, THEN LOAD
     </div>
   </div>`;
 
@@ -639,9 +664,7 @@ function renderWorkout() {
 // ═══════════════════════════════════════════
 function renderLog() {
   const entries = Object.keys(state).filter(k => state[k] > 0);
-  let h = `<div class="card">
-    <div class="card-hdr">PROGRESSION LOG</div>`;
-
+  let h = `<div class="card"><div class="card-hdr">PROGRESSION LOG</div>`;
   if (entries.length === 0) {
     h += `<div class="log-empty">
       No progressions yet.<br>
@@ -660,7 +683,6 @@ function renderLog() {
       </div>`;
     });
   }
-
   h += `<div style="padding:6px 11px;border-top:1px solid var(--border);font-size:7px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase">
     Persists across sessions · Reset restores base weights
   </div></div>`;
@@ -668,55 +690,52 @@ function renderLog() {
 }
 
 // ═══════════════════════════════════════════
-// RENDER — SYNC (Export / Import)
+// RENDER — SYNC
 // ═══════════════════════════════════════════
 function renderSync() {
   const blob = JSON.stringify(state);
   const count = Object.keys(state).filter(k => state[k] > 0).length;
-
   return `
-  <div class="export-card">
-    <div class="export-hdr">📤 EXPORT STATE</div>
-    <div class="export-body">
-      <div class="export-desc">
-        Copy this blob and paste it into Claude when requesting a program update.
-        Your progression history (${count} exercise${count!==1?'s':''}) will be baked into the new file.
-      </div>
-      <div class="export-blob" id="blob-display">${blob === '{}' ? '(no progressions recorded yet)' : blob}</div>
-      <div class="action-row">
-        <button class="act-btn primary" onclick="copyBlob()">COPY TO CLIPBOARD</button>
-        <button class="act-btn" onclick="shareBlob()">SHARE</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="export-card">
-    <div class="export-hdr">📥 IMPORT STATE</div>
-    <div class="export-body">
-      <div class="export-desc">
-        Paste a previously exported blob here to restore progression history after a file update from Claude.
-      </div>
-      <textarea class="import-area" id="import-field" placeholder='{"Bench Press":2,"Deadlift":1,...}'></textarea>
-      <div class="action-row">
-        <button class="act-btn primary" onclick="importBlob()">IMPORT & APPLY</button>
-        <button class="act-btn" onclick="clearImport()">CLEAR</button>
+    <div class="export-card">
+      <div class="export-hdr">📤 EXPORT STATE</div>
+      <div class="export-body">
+        <div class="export-desc">
+          Copy this blob and paste it into Claude when requesting a program update.
+          Your progression history (${count} exercise${count!==1?'s':''}) will be baked into the new file.
+        </div>
+        <div class="export-blob" id="blob-display">${blob === '{}' ? '(no progressions recorded yet)' : blob}</div>
+        <div class="action-row">
+          <button class="act-btn primary" onclick="copyBlob()">COPY TO CLIPBOARD</button>
+          <button class="act-btn" onclick="shareBlob()">SHARE</button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div class="card">
-    <div style="padding:10px 11px;font-size:7.5px;color:var(--muted);line-height:1.8;letter-spacing:.04em">
-      <strong style="color:var(--accent2)">HOW TO UPDATE YOUR PROGRAM</strong><br>
-      1. Tap COPY above to grab your state<br>
-      2. Upload Geraldine's new plan to Claude<br>
-      3. Paste the blob and say "update with my progression state"<br>
-      4. Download the new workout.html and push to GitHub<br>
-      5. Paste the blob back here via IMPORT on first open
+    <div class="export-card">
+      <div class="export-hdr">📥 IMPORT STATE</div>
+      <div class="export-body">
+        <div class="export-desc">
+          Paste a previously exported blob here to restore progression history after a file update.
+        </div>
+        <textarea class="import-area" id="import-field" placeholder='{"Bench Press":2,"Deadlift":1,...}'></textarea>
+        <div class="action-row">
+          <button class="act-btn primary" onclick="importBlob()">IMPORT & APPLY</button>
+          <button class="act-btn" onclick="clearImport()">CLEAR</button>
+        </div>
+      </div>
     </div>
-  </div>`;
+    <div class="card">
+      <div style="padding:10px 11px;font-size:7.5px;color:var(--muted);line-height:1.8;letter-spacing:.04em">
+        <strong style="color:var(--accent2)">HOW TO UPDATE YOUR PROGRAM</strong><br>
+        1. Tap COPY above to grab your state<br>
+        2. Upload new plan to Claude<br>
+        3. Paste the blob and say "update with my progression state"<br>
+        4. Download the new index.html and push to GitHub<br>
+        5. Paste the blob back here via IMPORT on first open
+      </div>
+    </div>`;
 }
 
-function bindSyncEvents() { /* event handlers inline via onclick */ }
+function bindSyncEvents() { /* handlers inline via onclick */ }
 
 function copyBlob() {
   const blob = JSON.stringify(state);
@@ -724,7 +743,6 @@ function copyBlob() {
   navigator.clipboard.writeText(blob).then(() => {
     showToast('✓ Copied to clipboard');
   }).catch(() => {
-    // fallback: select the text
     const el = document.getElementById('blob-display');
     const range = document.createRange();
     range.selectNodeContents(el);
@@ -738,11 +756,8 @@ function shareBlob() {
   const blob = JSON.stringify(state);
   if (blob === '{}') { showToast('Nothing to share yet'); return; }
   if (navigator.share) {
-    navigator.share({ title: 'Sullivan Lift State', text: blob })
-      .catch(() => {});
-  } else {
-    copyBlob();
-  }
+    navigator.share({ title: 'Sullivan Lift State', text: blob }).catch(() => {});
+  } else { copyBlob(); }
 }
 
 function importBlob() {
@@ -756,9 +771,7 @@ function importBlob() {
     showToast('✓ State imported — ' + Object.keys(state).filter(k=>state[k]>0).length + ' exercises restored');
     document.getElementById('import-field').value = '';
     render();
-  } catch {
-    showToast('Invalid blob — check format');
-  }
+  } catch { showToast('Invalid blob — check format'); }
 }
 
 function clearImport() {
