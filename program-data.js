@@ -27,6 +27,48 @@ export const STABILIZER_MENU = [
   { id: "stab-serratus", name: "Serratus Punches",        sets: 3, reps: "12", cue: null },
 ];
 
+// Ad-hoc movements addable to any day. Reused ids MUST keep their canonical program name
+// so weight history flows between planned and added work.
+export const EXTRAS_MENU = [
+  // --- ids shared with the program: same movement, same history ---
+  { id: "bench-press",     name: "Bench Press",                           sets: 3, reps: "8-10",     rpe: null, cue: null },
+  { id: "incline-db",      name: "Incline DB Press",                      sets: 3, reps: "8-10",     rpe: null, cue: null },
+  { id: "seated-db-press", name: "Seated DB Shoulder Press / Arnold Press", sets: 3, reps: "8-10",   rpe: null, cue: null },
+  { id: "db-lat-raise",    name: "DB Lateral Raise",                      sets: 3, reps: "12-15",    rpe: null, cue: null },
+  { id: "db-shrug",        name: "DB Shrugs",                             sets: 3, reps: "12-15",    rpe: null, cue: null },
+  { id: "face-pull",       name: "Cable Face Pull",                       sets: 3, reps: "15-20",    rpe: null, cue: null },
+  { id: "ng-pulldown",     name: "Neutral-Grip Lat Pulldown",             sets: 3, reps: "10",       rpe: null, cue: null },
+  { id: "cs-row",          name: "Chest-Supported Row",                   sets: 3, reps: "10-12",    rpe: null, cue: null },
+  { id: "rope-pushdown",   name: "Rope Pushdown",                         sets: 3, reps: "12-15",    rpe: null, cue: null },
+  { id: "tri-pushdown",    name: "Cable Triceps Pushdown",                sets: 3, reps: "12",       rpe: null, cue: null },
+  { id: "curl",            name: "EZ / DB Curl",                          sets: 3, reps: "10-12",    rpe: null, cue: null },
+  { id: "hammer-curl",     name: "Hammer Curl",                           sets: 3, reps: "12",       rpe: null, cue: null },
+  { id: "rdl",             name: "Romanian Deadlift",                     sets: 3, reps: "8-10",     rpe: null, cue: null },
+  { id: "hip-thrust",      name: "Hip Thrust",                            sets: 3, reps: "10",       rpe: null, cue: null },
+  { id: "leg-press",       name: "Leg Press",                             sets: 3, reps: "10-12",    rpe: null, cue: null },
+  { id: "leg-ext",         name: "Leg Extension",                         sets: 3, reps: "12-15",    rpe: null, cue: null },
+  { id: "ham-curl",        name: "Hamstring Curls",                       sets: 3, reps: "12",       rpe: null, cue: null },
+  { id: "bss",             name: "Bulgarian Split Squat",                 sets: 3, reps: "8-10 /leg", rpe: null, cue: null },
+  { id: "walking-lunge",   name: "Walking Lunges",                        sets: 3, reps: "10 /leg",  rpe: null, cue: null },
+  { id: "calf-standing",   name: "Standing Calf Raise",                   sets: 3, reps: "15",       rpe: null, cue: null },
+  { id: "kb-swing",        name: "KB Swings",                             sets: 3, reps: "12",       rpe: null, cue: null },
+  { id: "cable-crunch",    name: "Cable Crunch",                          sets: 3, reps: "12-15",    rpe: null, cue: null },
+  // --- extras-only movements ---
+  { id: "pushups",          name: "Pushups",              sets: 3, reps: "15",     rpe: null, cue: null },
+  { id: "dips",             name: "Dips",                 sets: 3, reps: "8-12",   rpe: null, cue: null },
+  { id: "pullups",          name: "Pull-ups",             sets: 3, reps: "6-10",   rpe: null, cue: null },
+  { id: "chinups",          name: "Chin-ups",             sets: 3, reps: "6-10",   rpe: null, cue: null },
+  { id: "db-row",           name: "1-Arm DB Row",         sets: 3, reps: "10-12",  rpe: null, cue: null },
+  { id: "arnold-press",     name: "Arnold Press",         sets: 3, reps: "8-10",   rpe: null, cue: null },
+  { id: "rear-delt-fly",    name: "DB Rear Delt Fly",     sets: 3, reps: "12-15",  rpe: null, cue: null },
+  { id: "preacher-curl",    name: "Preacher / Machine Curl", sets: 3, reps: "12-15", rpe: null, cue: null },
+  { id: "goblet-squat-x",   name: "Goblet Squat",         sets: 3, reps: "10-12",  rpe: null, cue: null },
+  { id: "farmer-carry-x",   name: "Farmer Carries",       sets: 3, reps: "40 yd",  rpe: null, cue: "heaviest DBs available" },
+  { id: "plank",            name: "Plank",                sets: 3, reps: "45",     rpe: null, cue: "seconds" },
+  { id: "side-plank",       name: "Side Plank",           sets: 3, reps: "30 /side", rpe: null, cue: "seconds" },
+  { id: "hanging-leg-raise", name: "Hanging Leg Raise",   sets: 3, reps: "8-12",   rpe: null, cue: null },
+];
+
 // requires: "db-only" | "needs-cable". First entry is the Hotel-mode default.
 const ALTERNATES = {
   // presses

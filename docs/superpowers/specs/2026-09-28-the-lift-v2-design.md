@@ -240,3 +240,24 @@ Two outputs:
 ## Out of scope, explicitly
 
 Nutrition, supplement adherence tracking, Apple Health import UI, auth, multi-user, charts/trends floor (candidate for a later session once there's logged data to chart).
+
+## Additions — 2026-09-29
+
+Two gym-floor ergonomics changes, both driven by one-handed use with cold hands. The inline set
+editor's reps and weight fields are now flanked by thumb-sized − / + steppers (reps ±1, weight ±5,
+both floored at 0), with press-and-hold auto-repeat after ~400ms at ~120ms per step; a single tap
+still moves exactly one step, and stepping an empty field starts from its prefilled default or 0.
+Focusing either field selects its whole value, so typing over a prefill no longer needs cursor
+surgery — the select is deferred a frame because iOS Safari drops it otherwise. The fields moved
+from `type="number"` to `type="text" inputmode="decimal"`: the keypad is unchanged, the spinners
+are redundant now, and text inputs actually support `select()`.
+
+Second, TODAY gained an ADDED WORK card between the stabilizer block and the note, for logging
+whatever happened off-plan — pushups and a plank during core, Arnold presses tacked onto a push
+day. A new `EXTRAS_MENU` export in `program-data.js` holds 35 addable movements, picked from a
+styled `<select>` and appended to `draft.extras`, one card per movement per day, each rendering
+through the normal set-logging path with remove standing in for skip. The rule that makes it worth
+having: any `EXTRAS_MENU` id that also appears in the PROGRAM must carry the identical canonical
+name, so weight history flows between planned and added work in both directions.
+`check_program.mjs` enforces that, `lastWeights` scans `session.extras` last, and HISTORY renders
+finished extras under an "Added" heading.

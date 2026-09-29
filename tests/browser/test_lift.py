@@ -129,6 +129,76 @@ try:
               draft()["exercises"][0]["sets"][0])
         check("(c) editor closed after log", page.locator(row(EX0, 0) + ' input[data-edit="reps"]').count() == 0)
 
+        # (c2) steppers + select-on-focus, on a row whose prefill is known: reps from the program
+        # ("12"), weight carried forward from the set logged just above it (95).
+        def step(s, field, direction):
+            return row(EX0, s) + f' .step-btn[data-step-field="{field}"][data-step="{direction}"]'
+
+        def edit(s, field):
+            return row(EX0, s) + f' input[data-edit="{field}"]'
+
+        page.click(row(EX0, 1) + ' [data-field="reps"]')
+        check("(c2) editor prefills reps from the program and weight from the set above",
+              page.input_value(edit(1, "reps")) == "12" and page.input_value(edit(1, "weight")) == "95",
+              (page.input_value(edit(1, "reps")), page.input_value(edit(1, "weight"))))
+        check("(c2) each field is flanked by a − and a + button",
+              page.locator(row(EX0, 1) + " .step-btn").count() == 4,
+              page.locator(row(EX0, 1) + " .step-btn").count())
+
+        # select-on-focus: focusing a prefilled field selects all of it, so typing replaces it
+        page.focus(edit(1, "weight"))
+        page.wait_for_timeout(120)  # select() is deferred a frame (iOS Safari needs that)
+        sel = page.eval_on_selector(edit(1, "weight"),
+                                    "el => [el.selectionStart, el.selectionEnd, el.value.length]")
+        check("(c2) focusing a field selects its whole value",
+              sel[0] == 0 and sel[1] == sel[2] and sel[2] > 0, sel)
+
+        # one tap === exactly one step
+        page.click(step(1, "weight", "1"))
+        check("(c2) one tap on + steps weight by 5", page.input_value(edit(1, "weight")) == "100",
+              page.input_value(edit(1, "weight")))
+        page.click(step(1, "weight", "1"))
+        check("(c2) taps accumulate one step each", page.input_value(edit(1, "weight")) == "105",
+              page.input_value(edit(1, "weight")))
+        page.click(step(1, "reps", "-1"))
+        check("(c2) one tap on − steps reps by 1", page.input_value(edit(1, "reps")) == "11",
+              page.input_value(edit(1, "reps")))
+
+        # press-and-hold auto-repeats after ~400ms, then every ~120ms. Timing assertion is
+        # deliberately loose — a 1s hold is worth ~6 steps; anything past 3 proves the repeat ran.
+        plus = page.locator(step(1, "reps", "1"))
+        box = plus.bounding_box()
+        before_hold = float(page.input_value(edit(1, "reps")))
+        page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        page.mouse.down()
+        page.wait_for_timeout(1000)
+        page.mouse.up()
+        after_hold = float(page.input_value(edit(1, "reps")))
+        check("(c2) press-and-hold auto-repeats the step", after_hold - before_hold >= 3,
+              (before_hold, after_hold))
+
+        page.fill(edit(1, "reps"), "11")
+        page.click(row(EX0, 1) + ' [data-act="logset"]')
+        check("(c2) ✓ stores exactly the stepped values",
+              draft()["exercises"][0]["sets"][1] == {"reps": 11, "weight": 105, "rpe": None},
+              draft()["exercises"][0]["sets"][1])
+        page.click(row(EX0, 1) + " .mark")  # un-log, so the empty-✓ case below starts clean
+        check("(c2) stepped row un-logs back to null", draft()["exercises"][0]["sets"][1] is None)
+
+        # the reps floor is 0, and 0 reps means "not recorded" rather than a set of zero reps
+        page.click(row(EX0, 2) + ' [data-field="reps"]')
+        page.fill(edit(2, "reps"), "1")
+        page.click(step(2, "reps", "-1"))
+        page.click(step(2, "reps", "-1"))
+        check("(c2) reps floor at 0 and never go negative", page.input_value(edit(2, "reps")) == "0",
+              page.input_value(edit(2, "reps")))
+        page.fill(edit(2, "weight"), "45")
+        page.click(row(EX0, 2) + ' [data-act="logset"]')
+        check("(c2) reps stepped down to 0 store as null, not 0",
+              draft()["exercises"][0]["sets"][2] == {"reps": None, "weight": 45, "rpe": None},
+              draft()["exercises"][0]["sets"][2])
+        page.click(row(EX0, 2) + " .mark")  # un-log again
+
         # (ii) ✓ with both fields cleared must not log, and must leave the editor open
         page.click(row(EX0, 1) + ' [data-field="reps"]')
         page.fill(row(EX0, 1) + ' input[data-edit="reps"]', "")
@@ -262,6 +332,64 @@ try:
         check("pre-finish bench sets are sparse [x,x,null,null]",
               bs[0] and bs[1] and bs[2] is None and bs[3] is None, bs)
 
+        # ---- ADDED WORK (ad-hoc movements appended to today) ----
+        EXTRAS = '[data-menu="extras"]'
+        EXTRA0 = EXTRAS + ' .ex[data-group="extras"][data-idx="0"]'
+        EXTRA1 = EXTRAS + ' .ex[data-group="extras"][data-idx="1"]'
+
+        def xrow(ex, s):
+            return f'{ex} .set-row[data-set="{s}"]'
+
+        check("(extras) the ADDED WORK card renders on TODAY", page.locator(EXTRAS).count() == 1)
+        check("(extras) picker opens on a placeholder that selects nothing",
+              page.eval_on_selector("#extras-pick", "el => el.value") == "",
+              page.eval_on_selector("#extras-pick", "el => el.value"))
+        opts = page.eval_on_selector_all("#extras-pick option", "els => els.map(e => e.textContent)")
+        check("(extras) movements are listed alphabetically after the placeholder",
+              opts[0] == "Add a movement…" and opts[1:] == sorted(opts[1:]), opts[:4])
+
+        page.select_option("#extras-pick", label="Pushups")
+        page.click(EXTRAS + ' [data-act="add-extra"]')
+        check("(extras) + ADD appends the movement to draft.extras",
+              [e["exerciseId"] for e in draft()["extras"]] == ["pushups"], draft()["extras"])
+        check("(extras) the added card shows 3 set rows",
+              page.locator(EXTRA0 + " .set-row").count() == 3, page.locator(EXTRA0 + " .set-row").count())
+        check("(extras) added work offers remove, never skip",
+              page.locator(EXTRA0 + ' [data-act="remove"]').count() == 1
+              and page.locator(EXTRA0 + ' [data-act="skip"]').count() == 0)
+
+        # adding the same movement again is a no-op — one card per movement per day
+        page.select_option("#extras-pick", label="Pushups")
+        page.click(EXTRAS + ' [data-act="add-extra"]')
+        check("(extras) adding the same movement twice is a no-op", len(draft()["extras"]) == 1,
+              draft()["extras"])
+
+        # log a set through the full editor, stepping a field that has no prefill at all (0 -> 5)
+        page.click(xrow(EXTRA0, 0) + ' [data-field="weight"]')
+        check("(extras) a field with no history and no prior set opens empty",
+              page.input_value(xrow(EXTRA0, 0) + ' input[data-edit="weight"]') == "",
+              page.input_value(xrow(EXTRA0, 0) + ' input[data-edit="weight"]'))
+        page.click(xrow(EXTRA0, 0) + ' .step-btn[data-step-field="weight"][data-step="1"]')
+        check("(extras) stepping an empty field with no default starts from 0",
+              page.input_value(xrow(EXTRA0, 0) + ' input[data-edit="weight"]') == "5",
+              page.input_value(xrow(EXTRA0, 0) + ' input[data-edit="weight"]'))
+        page.click(xrow(EXTRA0, 0) + ' [data-act="logset"]')
+        check("(extras) the set logs with the menu item's default reps",
+              draft()["extras"][0]["sets"][0] == {"reps": 15, "weight": 5, "rpe": None},
+              draft()["extras"][0]["sets"][0])
+
+        # a second movement, then remove it — no confirm, entry gone outright
+        page.select_option("#extras-pick", label="Arnold Press")
+        page.click(EXTRAS + ' [data-act="add-extra"]')
+        check("(extras) a second movement appends after the first",
+              [e["exerciseId"] for e in draft()["extras"]] == ["pushups", "arnold-press"], draft()["extras"])
+        check("(extras) Arnold Press renders its own card",
+              "Arnold Press" in page.inner_text(EXTRA1 + " .ex-name"), page.inner_text(EXTRA1 + " .ex-name"))
+        page.click(EXTRA1 + ' [data-act="remove"]')
+        check("(extras) remove drops the entry and leaves the rest alone",
+              [e["exerciseId"] for e in draft()["extras"]] == ["pushups"], draft()["extras"])
+        check("(extras) removing also drops the card", page.locator(EXTRA1).count() == 0)
+
         # (h) FINISH compacts and advances
         page.click("#btn-finish")
         page.wait_for_timeout(150)
@@ -271,7 +399,7 @@ try:
               page.inner_text("#floor-name"))
         check("(h) one workout session stored",
               len(after["sessions"]) == 1 and sess["type"] == "workout", after["sessions"])
-        allsets = [x for grp in ("exercises", "core", "stabilizers") for e in sess[grp] for x in e["sets"]]
+        allsets = [x for grp in ("exercises", "core", "stabilizers", "extras") for e in sess[grp] for x in e["sets"]]
         check("(h) stored sets are dense (no nulls)", all(x is not None for x in allsets), allsets)
         check("(h) bench sets compacted 4 slots -> 2 entries", len(sess["exercises"][0]["sets"]) == 2,
               sess["exercises"][0]["sets"])
@@ -280,6 +408,10 @@ try:
               sess["exercises"][1])
         check("(h) core sets compacted 3 slots -> 2 entries", len(sess["core"][0]["sets"]) == 2,
               sess["core"][0]["sets"])
+        check("(extras) finished session carries compacted extras",
+              len(sess["extras"]) == 1 and sess["extras"][0]["exerciseId"] == "pushups"
+              and sess["extras"][0]["sets"] == [{"reps": 15, "weight": 5, "rpe": None}],
+              sess.get("extras"))
         check("(h) session carries warmup / hotel / note",
               sess["warmup"]["choice"] == "row-15" and sess["hotel"] is False and sess["note"] == "left shoulder ok",
               (sess["warmup"], sess["hotel"], sess["note"]))
@@ -287,7 +419,8 @@ try:
         check("(h) finished draft replaced by an empty one for the new day",
               after["draft"]["dayId"] == "re-w2-d2"
               and all(x is None for e in after["draft"]["exercises"] for x in e["sets"])
-              and after["draft"]["core"] == [] and after["draft"]["note"] == "",
+              and after["draft"]["core"] == [] and after["draft"]["extras"] == []
+              and after["draft"]["note"] == "",
               after["draft"])
 
         # core history now prefills the next day's menu work (lastWeights reads session.core)
@@ -298,6 +431,14 @@ try:
               page.text_content('[data-menu="core"] .ex[data-group="core"][data-idx="0"]'
                                 ' .set-row[data-set="0"] [data-field="weight"]'))
         page.click('[data-menu="core"] .chips [data-id="core-deadbug"]')  # deselect again
+
+        # added work prefills from history too (lastWeights reads session.extras)
+        page.select_option("#extras-pick", label="Pushups")
+        page.click(EXTRAS + ' [data-act="add-extra"]')
+        check("(extras) added work prefills its weight from the previous session",
+              "5" in page.text_content(xrow(EXTRA0, 0) + ' [data-field="weight"]'),
+              page.text_content(xrow(EXTRA0, 0) + ' [data-field="weight"]'))
+        page.click(EXTRA0 + ' [data-act="remove"]')  # back to a clean slate for the rest of the flow
 
         # (j) REST DAY keeps the day and the draft
         page.click(row(EX0, 0) + " .mark")
@@ -369,6 +510,7 @@ try:
                   core: [{ exerciseId: 'core-deadbug', sets: [{ reps: 15, weight: null, rpe: null },
                                                                 { reps: 12, weight: 25, rpe: null }] }],
                   stabilizers: [],
+                  extras: [{ exerciseId: 'pushups', sets: [{ reps: 15, weight: null, rpe: null }] }],
                   note: 'left shoulder ok',
                 },
                 { date: restDate, type: 'rest' },
@@ -394,6 +536,8 @@ try:
               "Push" in row_text and WORKOUT_DATE in row_text
               and "sets" in row_text and "left shoulder ok" in row_text,
               row_text)
+        # 2 bench + 0 (skipped incline) + 2 core + 1 added = 5
+        check("(history) the summary set count includes added work", "5 sets" in row_text, row_text)
 
         # expand
         page.click(WORKOUT_ROW)
@@ -403,6 +547,8 @@ try:
         # .ex-tag is text-transform:uppercase (see the "DB swap"/"cable swap" tag check above),
         # so compare case-insensitively against the DOM's rendered text, not the literal markup.
         check("(history) detail includes a Core section", "core" in detail_text.lower(), detail_text)
+        check("(history) detail includes an Added section naming the extra movement",
+              "added" in detail_text.lower() and "Pushups" in detail_text, detail_text)
         check("(history) detail shows the full note", "left shoulder ok" in detail_text, detail_text)
         check("(history) skipped exercise shows 'skipped'",
               "Incline" in detail_text and "skipped" in detail_text, detail_text)

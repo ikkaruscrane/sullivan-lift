@@ -59,8 +59,9 @@ export function finishSession(state, session) {
 }
 
 // Newest session first; within a session, the day's own exercises win over the core/stabilizer
-// close-out, so a movement that appears in both prefills from the working sets rather than the finisher.
-const WEIGHT_SOURCES = ["exercises", "core", "stabilizers"];
+// close-out and over ad-hoc added work, so a movement that appears in more than one list prefills
+// from the working sets rather than the finisher or the scratch block.
+const WEIGHT_SOURCES = ["exercises", "core", "stabilizers", "extras"];
 
 export function lastWeights(sessions, exerciseId) {
   for (let i = sessions.length - 1; i >= 0; i--) {

@@ -121,6 +121,31 @@ test("lastWeights also finds core and stabilizer work, exercises first within a 
   assert.deepEqual(lastWeights(skipped, "core-deadbug"), []);
 });
 
+test("lastWeights scans added work, ranked last within a session", () => {
+  const sessions = [
+    { date: "2026-09-25", type: "workout", exercises: [], core: [], stabilizers: [], extras: [
+      { exerciseId: "pushups", sets: [{ reps: 15, weight: null }, { reps: 15, weight: 25 }] }] },
+  ];
+  assert.deepEqual(lastWeights(sessions, "pushups"), [null, 25]);
+  assert.deepEqual(lastWeights(sessions, "plank"), []);
+
+  // A shared id means a shared history: added work prefills planned work and vice versa.
+  const shared = [
+    { date: "2026-09-25", type: "workout", exercises: [], core: [], stabilizers: [], extras: [
+      { exerciseId: "curl", sets: [{ reps: 12, weight: 30 }] }] },
+  ];
+  assert.deepEqual(lastWeights(shared, "curl"), [30]);
+
+  // Within one session the day's working sets still win over the extras block.
+  const both = [{ date: "2026-09-27", type: "workout",
+    exercises: [{ exerciseId: "curl", skipped: false, sets: [{ reps: 10, weight: 40 }] }],
+    extras:    [{ exerciseId: "curl", sets: [{ reps: 15, weight: 20 }] }] }];
+  assert.deepEqual(lastWeights(both, "curl"), [40]);
+
+  // Sessions predating added work carry no extras key at all — that must not throw.
+  assert.deepEqual(lastWeights([{ date: "2026-09-20", type: "workout", exercises: [] }], "pushups"), []);
+});
+
 test("todayISO formats an explicit date exactly", () => {
   assert.equal(todayISO(new Date(2026, 8, 5)), "2026-09-05");
   assert.match(todayISO(), /^\d{4}-\d{2}-\d{2}$/);

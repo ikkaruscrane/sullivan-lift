@@ -4,7 +4,7 @@ import {
   advance, logRest, finishSession, lastWeights, todayISO,
 } from "./lib.js";
 import {
-  PROGRAM, WARMUP_MENU, CORE_MENU, STABILIZER_MENU, STACK, START_DAY_INDEX,
+  PROGRAM, WARMUP_MENU, CORE_MENU, STABILIZER_MENU, EXTRAS_MENU, STACK, START_DAY_INDEX,
 } from "./program-data.js";
 
 const KEY = "lift.v1";
@@ -113,7 +113,7 @@ function ensureDraft(entry) {
       exerciseId: ex.id, swappedTo: state.hotelModeDefault && ex.alternates.length ? ex.alternates[0].id : null,
       skipped: false, sets: blankSets(ex.sets),
     })),
-    core: [], stabilizers: [], note: "",
+    core: [], stabilizers: [], extras: [], note: "",
   };
   saveState();
   return state.draft;
@@ -127,7 +127,8 @@ function normalizeDraft(draft, entry) {
   fix(draft, "warmup", { choice: entry.day.warmupDefault, done: false });
   fix(draft, "hotel", false);
   fix(draft, "note", "");
-  for (const key of ["core", "stabilizers", "exercises"])
+  // "extras" is backfilled here for drafts written before added work existed.
+  for (const key of ["core", "stabilizers", "extras", "exercises"])
     if (!Array.isArray(draft[key])) { draft[key] = []; changed = true; }
 
   const repad = (holder, n) => {
@@ -154,7 +155,7 @@ function normalizeDraft(draft, entry) {
   draft.exercises = rebuiltExercises;
 
   // Drop selections whose menu item no longer exists — they'd render nothing but still count toward FINISH.
-  for (const kind of ["core", "stabilizers"]) {
+  for (const kind of ["core", "stabilizers", "extras"]) {
     const menu = menuFor(kind);
     draft[kind] = draft[kind].flatMap(sel => {
       const m = menu.find(x => x.id === sel.exerciseId);
@@ -166,7 +167,9 @@ function normalizeDraft(draft, entry) {
   return changed;
 }
 
-function menuFor(kind) { return kind === "core" ? CORE_MENU : STABILIZER_MENU; }
+// The three id-matched selection lists on TODAY. "exercises" is positional and not in here.
+const MENU_GROUPS = { core: CORE_MENU, stabilizers: STABILIZER_MENU, extras: EXTRAS_MENU };
+function menuFor(kind) { return MENU_GROUPS[kind] ?? []; }
 
 // Menu items are shaped into the same record renderExercise takes for program exercises.
 function menuExercise(m) {
@@ -211,6 +214,7 @@ function renderToday(root) {
 
   root.appendChild(renderMenuBlock("CORE — every day", CORE_MENU, draft.core, "core"));
   root.appendChild(renderMenuBlock("STABILIZERS — optional", STABILIZER_MENU, draft.stabilizers, "stabilizers"));
+  root.appendChild(renderExtrasBlock(draft));
 
   root.appendChild(el(`<div class="card">
     <textarea class="note-input" id="workout-note" placeholder="Notes (optional)">${esc(draft.note ?? "")}</textarea>
@@ -256,7 +260,11 @@ function renderExercise(ex, draftEx, ref) {
     ${shown.cue ? `<div class="ex-cue">${shown.cue}</div>` : ""}
     <div class="sets"></div>
     <div class="ex-controls">
-      <button data-act="skip"${draftEx.skipped ? ' class="lit"' : ""}>${draftEx.skipped ? "unskip" : "skip"}</button>
+      ${ref.group === "extras"
+        // Added work is scratch: removing the entry outright is the whole undo story, so it
+        // replaces skip rather than sitting next to it.
+        ? `<button data-act="remove">remove</button>`
+        : `<button data-act="skip"${draftEx.skipped ? ' class="lit"' : ""}>${draftEx.skipped ? "unskip" : "skip"}</button>`}
       ${ex.alternates.length ? `<button data-act="swap"${draftEx.swappedTo ? ' class="lit"' : ""}>swap</button>` : ""}
     </div>
   </div>`);
@@ -283,11 +291,20 @@ function renderSetRow(ex, draftEx, ref, s, last) {
   const def = setDefaults(ex, draftEx, s, last);
 
   if (isEditingRow(ref.group, ref.index, s)) {
+    // type="text" + inputmode="decimal": keeps the numeric keypad on iOS while allowing
+    // select() / selectionStart, which type="number" refuses. The steppers replace the spinners.
+    const field = (name, label, placeholder) => `
+      <span class="stepper">
+        <button class="step-btn" data-step="-1" data-step-field="${name}" aria-label="${label} down" tabindex="-1">−</button>
+        <input type="text" inputmode="decimal" autocomplete="off" data-edit="${name}"
+               value="${esc(def[name])}" data-default="${esc(def[name])}" placeholder="${placeholder}" aria-label="${label}">
+        <button class="step-btn" data-step="1" data-step-field="${name}" aria-label="${label} up" tabindex="-1">+</button>
+      </span>`;
     return el(`<div class="set-row" data-set="${s}">
       <span class="setnum">${s + 1}</span>
       <span class="vals editing">
-        <input type="number" inputmode="decimal" data-edit="reps" value="${esc(def.reps)}" placeholder="reps" aria-label="reps">
-        <input type="number" inputmode="decimal" data-edit="weight" value="${esc(def.weight)}" placeholder="lb" aria-label="weight">
+        ${field("reps", "reps", "reps")}
+        ${field("weight", "weight", "lb")}
         <button class="logset-btn" data-act="logset" aria-label="log set">✓</button>
         <span class="rpe-row">
           ${RPE_SCALE.map(v => `<button class="chip rpe-chip${editing.rpe === v ? " on" : ""}" data-rpe="${v}">${v}</button>`).join("")}
@@ -326,6 +343,38 @@ function renderMenuBlock(title, menu, selections, kind) {
   return card;
 }
 
+// Ad-hoc work added to today's session. Unlike CORE/STABILIZERS this is a long list, so it's a
+// picker rather than a chip wall; each pick renders through the same renderExercise path.
+function renderExtrasBlock(draft) {
+  const card = el(`<div class="card" data-menu="extras">
+    <h1 class="section-title" style="font-size:17px">ADDED WORK</h1>
+    <p class="section-sub">Anything extra you did today. Logged with the session.</p>
+    <div class="add-row">
+      <select class="select" id="extras-pick" aria-label="add a movement"></select>
+      <button class="chip add-btn" data-act="add-extra">ADD</button>
+    </div>
+    <div class="picked"></div>
+  </div>`);
+  const sel = card.querySelector("#extras-pick");
+  // textContent throughout — option labels are never parsed as HTML, so no escaping needed.
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Add a movement…";
+  sel.appendChild(placeholder);
+  for (const m of [...EXTRAS_MENU].sort((a, b) => a.name.localeCompare(b.name))) {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = m.name;
+    sel.appendChild(opt);
+  }
+  const picked = card.querySelector(".picked");
+  draft.extras.forEach((entry, i) => {
+    const m = EXTRAS_MENU.find(x => x.id === entry.exerciseId);
+    if (m) picked.appendChild(renderExercise(menuExercise(m), entry, { group: "extras", index: i }));
+  });
+  return card;
+}
+
 function renderGate(root, entry) {
   setIndicator("CHECKPOINT");
   root.appendChild(el(`<div class="card gate-card">
@@ -352,7 +401,7 @@ function renderHistory(root) {
     }
     const entry = FLAT.find(e => e.kind === "day" && e.day.id === s.dayId);
     const dayName = entry ? entry.day.name : s.dayId;
-    const setCount = [...(s.exercises ?? []), ...(s.core ?? []), ...(s.stabilizers ?? [])]
+    const setCount = [...(s.exercises ?? []), ...(s.core ?? []), ...(s.stabilizers ?? []), ...(s.extras ?? [])]
       .reduce((n, e) => n + (e.sets?.length ?? 0), 0);
     const skipped = (s.exercises ?? []).filter(e => e.skipped).length;
     const item = el(`<div class="hist-item">
@@ -377,12 +426,12 @@ function sessionDetailHTML(s, entry) {
   const lines = [];
   const nameFor = (exId, swappedTo) => {
     const progEx = entry?.day.exercises.find(e => e.id === exId);
-    const menu = [...CORE_MENU, ...STABILIZER_MENU].find(m => m.id === exId);
+    const menu = [...CORE_MENU, ...STABILIZER_MENU, ...EXTRAS_MENU].find(m => m.id === exId);
     let name = progEx?.name ?? menu?.name ?? exId;
     if (swappedTo && progEx) name = progEx.alternates.find(a => a.id === swappedTo)?.name ?? name;
     return name;
   };
-  for (const [label, grp] of [["", s.exercises], ["Core", s.core], ["Stabilizers", s.stabilizers]]) {
+  for (const [label, grp] of [["", s.exercises], ["Core", s.core], ["Stabilizers", s.stabilizers], ["Added", s.extras]]) {
     if (!grp?.length) continue;
     if (label) lines.push(`<div class="ex-tag" style="margin-top:8px">${label}</div>`);
     for (const e of grp) {
@@ -462,7 +511,7 @@ function renderSettings(root) {
   const card = el(`<div class="card">
     <h1 class="section-title">Position</h1>
     <p class="section-sub">Now: ${entry.kind === "gate" ? esc(entry.gate.title) : `${esc(entry.weekLabel)} · ${esc(entry.day.name)}`}</p>
-    <select id="pos-day" style="width:100%;padding:12px;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--steel-border);border-radius:8px;font-family:var(--font-ui);font-size:16px"></select>
+    <select id="pos-day" class="select"></select>
     <div class="action-row"><button class="btn-big" id="btn-setpos">SET POSITION</button></div>
   </div>`);
   const sel = card.querySelector("#pos-day");
@@ -478,7 +527,8 @@ function renderSettings(root) {
     const hasWork = state.draft && (
       state.draft.exercises.some(e => e.sets?.some(s => s != null)) ||
       state.draft.core.some(c => c.sets?.some(s => s != null)) ||
-      state.draft.stabilizers.some(c => c.sets?.some(s => s != null)));
+      state.draft.stabilizers.some(c => c.sets?.some(s => s != null)) ||
+      (state.draft.extras ?? []).some(c => c.sets?.some(s => s != null)));
     if (hasWork && !confirm("Discard the sets you've logged for the current workout?")) return;
     state.position.dayIndex = Number(sel.value);
     state.draft = null;   // deliberate: position change discards any in-progress draft
@@ -545,12 +595,70 @@ render();
 // navigation and would stack duplicates. Per-render listeners exist only for the note textarea.
 document.getElementById("floor").addEventListener("click", onFloorClick);
 
+// Two more delegated listeners, attached once alongside it — the inline editor's ergonomics.
+// focusin (not focus) so it bubbles up from an input created by the last render().
+document.getElementById("floor").addEventListener("focusin", onFloorFocusIn);
+document.getElementById("floor").addEventListener("pointerdown", onFloorPointerDown);
+
+// Focusing a prefilled field selects it, so typing replaces the value instead of appending to it.
+// iOS Safari applies the caret after the focus handler returns, so select() has to wait a frame.
+function onFloorFocusIn(ev) {
+  const input = ev.target;
+  if (!(input instanceof HTMLInputElement) || !input.dataset.edit) return;
+  requestAnimationFrame(() => {
+    if (document.activeElement !== input) return;
+    try { input.select(); } catch { /* some inputs refuse selection; typing still works */ }
+  });
+}
+
+// ---- steppers ----
+const STEP_BY = { reps: 1, weight: 5 };
+const HOLD_MS = 400;    // how long a press has to be held before it starts repeating
+const REPEAT_MS = 120;  // repeat interval once it does
+
+// Reads the field, applies one step, writes it back. Floor is 0 for both fields. An empty field
+// steps from its prefilled default (data-default), or from 0 when the row had no default.
+function stepField(row, name, dir) {
+  const input = row?.querySelector(`[data-edit="${name}"]`);
+  if (!input) return;
+  const raw = input.value.trim() === "" ? (input.dataset.default ?? "") : input.value;
+  const base = parseFloat(raw);
+  const from = Number.isNaN(base) ? 0 : base;
+  const next = Math.max(0, from + dir * (STEP_BY[name] ?? 1));
+  // Keep it clean for the ±5 weight ladder: no floating-point tails from a .5 start.
+  input.value = String(Math.round(next * 100) / 100);
+}
+
+// The tap itself steps once here on pointerdown (so the press feels instant), and the click that
+// follows is ignored by onTodayClick — that's the guard against a hold also stepping on release.
+function onFloorPointerDown(ev) {
+  const btn = ev.target instanceof Element ? ev.target.closest("[data-step]") : null;
+  if (!btn) return;
+  ev.preventDefault(); // no focus steal, no double-tap zoom, no text selection on a long press
+  const row = btn.closest(".set-row");
+  const name = btn.dataset.stepField;
+  const dir = Number(btn.dataset.step);
+  stepField(row, name, dir);
+
+  let repeat = null;
+  const hold = setTimeout(() => { repeat = setInterval(() => stepField(row, name, dir), REPEAT_MS); }, HOLD_MS);
+  const end = () => {
+    clearTimeout(hold);
+    if (repeat) clearInterval(repeat);
+    for (const type of ["pointerup", "pointercancel", "pointerleave"]) btn.removeEventListener(type, end);
+  };
+  // Bound to the button itself, and torn down on the first of the three to fire — pointerleave
+  // doesn't bubble, and a per-press listener can't stack the way a delegated one would.
+  for (const type of ["pointerup", "pointercancel", "pointerleave"]) btn.addEventListener(type, end);
+}
+
 function commit() { editing = null; saveState(); render(); }
 
 function currentEntry() { return entryAt(FLAT, state.position.dayIndex); }
 
 function draftListFor(draft, group) {
-  return group === "exercises" ? draft.exercises : group === "core" ? draft.core : draft.stabilizers;
+  if (group === "exercises") return draft.exercises;
+  return MENU_GROUPS[group] ? draft[group] : null;
 }
 
 // The program record behind a draft entry: the day's exercise for the main list, the menu item otherwise.
@@ -584,6 +692,10 @@ function onFloorClick(ev) {
 }
 
 function onTodayClick(t) {
+  // Steppers are driven entirely by onFloorPointerDown — swallowing the click here is what keeps
+  // a tap to exactly one step and stops a press-and-hold from stepping once more on release.
+  if (t.closest("[data-step]")) return;
+
   if (t.closest("#btn-gate"))   { advance(state); commit(); return; }
   if (t.closest("#btn-rest"))   { onRest(); return; }
   if (t.closest("#btn-finish")) { onFinish(); return; }
@@ -623,6 +735,8 @@ function onTodayClick(t) {
     return;
   }
 
+  if (t.closest('[data-act="add-extra"]')) { addExtra(draft); return; }
+
   const chip = t.closest("[data-id]");
   const menuCard = chip?.closest("[data-menu]");
   if (chip && menuCard) { toggleMenuItem(draft, menuCard.dataset.menu, chip.dataset.id); return; }
@@ -637,6 +751,14 @@ function onTodayClick(t) {
   if (!progEx) return;
 
   const act = t.closest("[data-act]")?.dataset.act;
+  if (act === "remove") {
+    // Added work is additive scratch — no confirm, and nothing to restore. Skip's keep-the-sets
+    // dance doesn't apply because the entry itself is gone.
+    if (group !== "extras") return;
+    draft.extras.splice(idx, 1);
+    commit();
+    return;
+  }
   if (act === "skip") {
     // Sets are kept, not cleared: the rows are only hidden, so unskipping restores what was logged.
     // A skipped exercise contributes no sets to the finished session — see compactSets.
@@ -657,7 +779,10 @@ function onTodayClick(t) {
   const s = Number(row.dataset.set);
 
   if (act === "logset") {
-    const reps = num(row.querySelector('[data-edit="reps"]')?.value);
+    // 0 reps is the stepper's floor, i.e. "I cleared this field" — store it as not-recorded
+    // rather than as a set of zero reps. A 0 weight is real (bodyweight), so it stays.
+    const repsRaw = num(row.querySelector('[data-edit="reps"]')?.value);
+    const reps = repsRaw === 0 ? null : repsRaw;
     const weight = num(row.querySelector('[data-edit="weight"]')?.value);
     if (reps === null && weight === null) return; // nothing to record — leave the editor open
     dEx.sets[s] = { reps, weight, rpe: editing?.rpe ?? null };
@@ -686,6 +811,18 @@ function toggleMenuItem(draft, kind, id) {
   commit();
 }
 
+// One card per movement per day — picking something already on the list is a no-op, since the
+// card sitting right below the picker is the feedback.
+function addExtra(draft) {
+  const id = document.getElementById("extras-pick")?.value;
+  if (!id) return;
+  if (draft.extras.some(e => e.exerciseId === id)) return;
+  const m = EXTRAS_MENU.find(x => x.id === id);
+  if (!m) return;
+  draft.extras.push({ exerciseId: id, sets: blankSets(m.sets) });
+  commit();
+}
+
 function onRest() {
   if (!confirm("Log a rest day? Today's workout stays queued for tomorrow.")) return;
   logRest(state, todayISO());
@@ -707,6 +844,7 @@ function onFinish() {
     exercises: compactSets(draft.exercises),
     core: compactSets(draft.core),
     stabilizers: compactSets(draft.stabilizers),
+    extras: compactSets(draft.extras ?? []),
   });
   commit();
 }

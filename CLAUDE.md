@@ -14,13 +14,13 @@ from `main`. A push IS a deploy.
 | `program-data.js` | The entire training program as data. Edit workouts HERE, not in app.js |
 | `sw.js` | Service worker — network-first, so deploys apply without touching VERSION |
 | `scripts/check_program.mjs` | Integrity checks for program-data.js |
-| `tests/` | `lib.test.mjs` (unit) + `browser/test_lift.py` (133-assertion Playwright E2E) |
+| `tests/` | `lib.test.mjs` (unit) + `browser/test_lift.py` (162-assertion Playwright E2E) |
 
 ## Edit → verify → deploy
 
 ```bash
 # 1. verify after any change
-node --test                                # unit (9 tests)
+node --test                                # unit (10 tests)
 node scripts/check_program.mjs             # required after ANY program-data.js edit
 python3 tests/browser/test_lift.py         # full E2E; see note below
 
@@ -39,6 +39,9 @@ git push                                   # that's the whole deploy
   `{id, name, sets, reps, rpe, tag, cue, alternates}`, `alternates[0]` must be
   `requires: "db-only"` (Hotel mode depends on it), one canonical name per
   exercise id. `check_program.mjs` enforces all of this; run it, don't guess.
+- `EXTRAS_MENU` (the ADDED WORK picker on TODAY) reuses program exercise ids on purpose, so
+  weight history flows between planned and ad-hoc sets. A reused id must carry the exact
+  canonical program name — `check_program.mjs` fails if it doesn't.
 - `sw.js` VERSION only recycles the offline cache; freshness never depends on
   bumping it.
 

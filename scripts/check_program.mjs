@@ -1,5 +1,5 @@
 // scripts/check_program.mjs — program-data integrity. Run: node scripts/check_program.mjs
-import { PROGRAM, WARMUP_MENU, CORE_MENU, STABILIZER_MENU, STACK, START_DAY_INDEX } from "../program-data.js";
+import { PROGRAM, WARMUP_MENU, CORE_MENU, STABILIZER_MENU, EXTRAS_MENU, STACK, START_DAY_INDEX } from "../program-data.js";
 import { flattenDays } from "../lib.js";
 
 const errors = [];
@@ -48,5 +48,18 @@ for (const m of [...CORE_MENU, ...STABILIZER_MENU]) {
 }
 if (!STACK.length || STACK.some(s => !s.section || !s.items?.length)) errors.push("STACK empty or has empty sections");
 
+// EXTRAS_MENU: added work shares exercise ids with the program so weight history flows between
+// planned and ad-hoc sets. That only holds while a shared id carries the identical canonical name.
+if (!EXTRAS_MENU.length) errors.push("EXTRAS_MENU is empty");
+const extraIds = new Set();
+for (const m of EXTRAS_MENU) {
+  if (!m.id || !m.name || !m.sets || !m.reps) { errors.push(`extras item ${m.id ?? "?"} incomplete`); continue; }
+  if (extraIds.has(m.id)) errors.push(`EXTRAS_MENU: duplicate id ${m.id}`);
+  extraIds.add(m.id);
+  const canonical = nameById.get(m.id);
+  if (canonical !== undefined && canonical !== m.name)
+    errors.push(`EXTRAS_MENU: id ${m.id} is "${m.name}" but the program calls it "${canonical}" — history would split`);
+}
+
 if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-console.log(`OK — ${flat.length} entries, ${flat.filter(e => e.kind === "day").length} training days`);
+console.log(`OK — ${flat.length} entries, ${flat.filter(e => e.kind === "day").length} training days, ${EXTRAS_MENU.length} extras`);
