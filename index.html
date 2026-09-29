@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0D0D0F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>The Lift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0D0D0F; --bg-panel: #141416; --bg-surface: #1C1C1F;
+  --bg-glass: rgba(255,255,255,0.04);
+  --steel-light: #C8C8CC; --steel-mid: #8E8E93; --steel-dark: #48484A; --steel-border: #3A3A3C;
+  --accent-amber: #FFB340; --accent-amber-dim: #7A5520; --accent-amber-glow: rgba(255,179,64,0.25);
+  --text-primary: #E5E5EA; --text-secondary: #8E8E93; --text-dim: #48484A;
+  --text-engraved: #5A5A5E; --text-lit: #FFB340;
+  --shadow-deep: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-button: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  --shadow-active: 0 0 20px rgba(255,179,64,0.4);
+  --font-display: 'Bebas Neue', 'Oswald', sans-serif;
+  --font-ui: 'DM Sans', 'Syne', sans-serif;
+  --font-data: 'JetBrains Mono', 'Fira Code', monospace;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg-primary); color: var(--text-primary);
+  font-family: var(--font-ui); font-size: 14px;
+  display: flex; flex-direction: column; overscroll-behavior-y: none;
+}
+
+/* Floor indicator (top strip) */
+#indicator {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  border-bottom: 1px solid var(--accent-amber-dim); background: var(--bg-panel);
+  z-index: 10;
+}
+#indicator .wordmark { font-family: var(--font-display); font-size: 22px; letter-spacing: .06em; color: var(--steel-light); }
+#indicator .floorname { font-family: var(--font-display); font-size: 14px; color: var(--accent-amber); letter-spacing: .05em; text-align: right; }
+#indicator .floorname .arrow { margin-right: 6px; }
+
+/* Floor content */
+#floor { flex: 1; overflow-y: auto; padding: 16px 14px calc(96px + env(safe-area-inset-bottom)); max-width: 640px; width: 100%; margin: 0 auto; }
+.floor-enter { animation: floorUp .25s cubic-bezier(.22,1,.36,1); }
+.floor-enter-down { animation: floorDown .25s cubic-bezier(.22,1,.36,1); }
+@keyframes floorUp   { from { opacity: 0; transform: translateY(12px); }  to { opacity: 1; transform: none; } }
+@keyframes floorDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+
+/* Elevator button rail (bottom) */
+#rail {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+  display: flex; justify-content: center; gap: 14px;
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg-panel) 75%, transparent);
+}
+.lift-btn {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #2C2C2E, #1C1C1F);
+  border: 1.5px solid var(--steel-dark); box-shadow: var(--shadow-button);
+  color: var(--text-engraved); font-family: var(--font-display);
+  font-size: 10.5px; letter-spacing: .08em; cursor: pointer; position: relative;
+  transition: all .15s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+}
+.lift-btn::before { content: ''; position: absolute; inset: 2px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.06); }
+.lift-btn .num { font-size: 14px; }
+.lift-btn.active {
+  background: radial-gradient(circle at 35% 35%, #3D2800, #1C1200);
+  border-color: var(--accent-amber-dim); color: var(--text-lit); box-shadow: var(--shadow-active);
+}
+.lift-btn:active { transform: scale(.94); }
+
+/* backdrop-filter intentionally omitted: over a near-black ground the blur is invisible
+   and it costs scroll performance on mobile Safari. */
+/* Cards */
+.card {
+  background: var(--bg-glass); border: 1px solid var(--steel-border); border-radius: 12px;
+  box-shadow: var(--shadow-deep); padding: 16px; margin-bottom: 14px;
+}
+.section-title { font-family: var(--font-display); font-size: 21px; letter-spacing: .03em; margin: 0 0 4px; }
+.section-sub { color: var(--text-secondary); font-size: 12.5px; margin: 0 0 12px; line-height: 1.5; }
+.mono { font-family: var(--font-data); }
+.dim { color: var(--text-secondary); }
+.amber { color: var(--accent-amber); }
+
+/* Chips (warmup menu, core menu, RPE picker) */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  border: 1px solid var(--steel-border); background: var(--bg-surface); color: var(--text-secondary);
+  border-radius: 20px; padding: 10px 16px; font-size: 13px; cursor: pointer; font-family: var(--font-ui);
+  transition: all .15s ease;
+}
+.chip.on { border-color: var(--accent-amber-dim); color: var(--text-lit); background: rgba(255,179,64,0.08); }
+
+/* Exercise cards */
+.ex { padding: 12px 0; border-bottom: 1px solid var(--steel-border); }
+.ex:last-child { border-bottom: none; }
+.ex-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ex-name { font-size: 14.5px; font-weight: 500; }
+.ex-tag { font-size: 10px; color: var(--accent-amber); letter-spacing: .04em; margin-left: 6px; text-transform: uppercase; }
+.ex-target { font-family: var(--font-data); font-size: 12px; color: var(--steel-light); white-space: nowrap; }
+.ex-cue { font-size: 11.5px; color: var(--text-secondary); margin-top: 3px; line-height: 1.45; }
+.ex-controls { display: flex; gap: 12px; margin-top: 6px; }
+.ex-controls button {
+  background: none; border: none; color: var(--steel-mid); font-size: 11px; letter-spacing: .05em;
+  text-transform: uppercase; cursor: pointer; padding: 10px 12px; min-height: 40px; font-family: var(--font-ui);
+}
+.ex-controls button.lit { color: var(--accent-amber); }
+.ex.skipped .ex-name, .ex.skipped .ex-target { color: var(--text-dim); text-decoration: line-through; }
+
+/* Set rows */
+.sets { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.set-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-surface); border: 1px solid var(--steel-border); border-radius: 8px;
+  padding: 12px; cursor: pointer; font-family: var(--font-data); font-size: 13px;
+  transition: border-color .15s ease;
+}
+.set-row .setnum { color: var(--text-dim); width: 22px; }
+.set-row .vals { flex: 1; color: var(--steel-light); display: flex; gap: 14px; }
+.set-row .vals .unit { color: var(--text-dim); font-size: 11px; }
+.set-row .mark { width: 22px; text-align: center; color: var(--text-dim); }
+.set-row.done { border-color: var(--accent-amber-dim); }
+.set-row.done .mark { color: var(--accent-amber); }
+.set-row input {
+  width: 64px; background: var(--bg-primary); border: 1px solid var(--steel-border); border-radius: 6px;
+  color: var(--text-primary); font-family: var(--font-data); font-size: 16px; padding: 6px 8px; text-align: right;
+}
+.set-row input:focus { outline: none; border-color: var(--accent-amber-dim); }
+
+/* Inline set editor (replaces .vals on the row being edited) */
+.set-row .vals.editing { flex-wrap: wrap; align-items: center; gap: 8px; }
+.logset-btn {
+  margin-left: auto; min-height: 40px; padding: 8px 16px; font-size: 16px; cursor: pointer;
+  border-radius: 8px; border: 1px solid var(--accent-amber-dim);
+  background: rgba(255,179,64,0.12); color: var(--accent-amber);
+}
+.rpe-row { display: flex; flex-wrap: wrap; gap: 5px; flex-basis: 100%; }
+/* flex-basis 16% lands five per row on a phone — nine across leaves targets too small to hit mid-set. */
+.rpe-chip {
+  flex: 1 1 16%; padding: 9px 2px; text-align: center;
+  font-size: 12px; font-family: var(--font-data); border-radius: 14px;
+}
+
+/* Big action buttons */
+.action-row { display: flex; gap: 10px; margin: 18px 0 6px; }
+.btn-big {
+  flex: 1; padding: 15px; border-radius: 12px; font-family: var(--font-display);
+  font-size: 17px; letter-spacing: .06em; cursor: pointer; transition: transform .1s ease;
+  border: 1px solid var(--steel-border); background: var(--bg-surface); color: var(--steel-light);
+}
+.btn-big.primary { border-color: var(--accent-amber-dim); background: rgba(255,179,64,0.1); color: var(--accent-amber); box-shadow: var(--shadow-active); }
+.btn-big:disabled { opacity: .35; box-shadow: none; cursor: default; }
+.btn-big:active { transform: scale(.97); }
+
+/* Utility */
+.note-input {
+  width: 100%; background: var(--bg-surface); border: 1px solid var(--steel-border); border-radius: 8px;
+  color: var(--text-primary); font-family: var(--font-ui); font-size: 16px; padding: 10px; min-height: 54px; resize: vertical;
+}
+.banner-warn {
+  background: rgba(255,179,64,0.1); border: 1px solid var(--accent-amber-dim); color: var(--accent-amber);
+  border-radius: 8px; padding: 10px 12px; font-size: 12.5px; margin-bottom: 12px;
+}
+.hist-item { padding: 12px 0; border-bottom: 1px solid var(--steel-border); cursor: pointer; }
+.hist-item:last-child { border-bottom: none; }
+.chip:active, .set-row:active, .hist-item:active, .ex-controls button:active, .logset-btn:active { transform: scale(.97); }
+.gate-card { border-color: var(--accent-amber-dim); }
+</style>
+</head>
+<body>
+  <header id="indicator">
+    <div class="wordmark">THE LIFT</div>
+    <div class="floorname" id="floor-name"><span class="arrow">▲</span>TODAY</div>
+  </header>
+  <main id="floor"></main>
+  <nav id="rail"></nav>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
