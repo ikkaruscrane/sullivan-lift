@@ -14,7 +14,7 @@ from `main`. A push IS a deploy.
 | `program-data.js` | The entire training program as data. Edit workouts HERE, not in app.js |
 | `sw.js` | Service worker — network-first, so deploys apply without touching VERSION |
 | `scripts/check_program.mjs` | Integrity checks for program-data.js |
-| `tests/` | `lib.test.mjs` (unit) + `browser/test_lift.py` (162-assertion Playwright E2E) |
+| `tests/` | `lib.test.mjs` (unit) + `browser/test_lift.py` (167-assertion Playwright E2E) |
 
 ## Edit → verify → deploy
 

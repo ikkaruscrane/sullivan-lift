@@ -199,6 +199,31 @@ try:
               draft()["exercises"][0]["sets"][2])
         page.click(row(EX0, 2) + " .mark")  # un-log again
 
+        # (c2) a re-render mid-hold detaches the button and the input under it — the repeat must
+        # stop rather than tick forever against a node that is no longer in the document.
+        page.click(row(EX0, 1) + ' [data-field="reps"]')
+        page.eval_on_selector(edit(1, "reps"), "el => { window.__held = el; }")
+        plus = page.locator(step(1, "reps", "1"))
+        box = plus.bounding_box()
+        page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        page.mouse.down()
+        page.wait_for_timeout(700)  # past HOLD_MS, repeat is running
+        page.evaluate("document.querySelector('#rail .lift-btn:nth-child(2)').click()")  # -> HISTORY
+        page.wait_for_timeout(400)  # long enough for the guard to fire on the next tick
+        detached = page.evaluate("window.__held.value")
+        page.wait_for_timeout(500)
+        check("(c2) hold-repeat stops when a re-render detaches the button",
+              page.evaluate("window.__held.value") == detached,
+              (detached, page.evaluate("window.__held.value")))
+        page.mouse.up()
+        check("(c2) the detached input is really off the page",
+              page.evaluate("window.__held.isConnected") is False)
+        page.evaluate("delete window.__held")
+        page.click("#rail .lift-btn:nth-child(1)")  # back to TODAY
+        page.wait_for_selector(EX0)
+        check("(c2) an interrupted hold logged nothing", draft()["exercises"][0]["sets"][1] is None,
+              draft()["exercises"][0]["sets"][1])
+
         # (ii) ✓ with both fields cleared must not log, and must leave the editor open
         page.click(row(EX0, 1) + ' [data-field="reps"]')
         page.fill(row(EX0, 1) + ' input[data-edit="reps"]', "")
@@ -457,16 +482,30 @@ try:
         check("reload preserves the logged set row", "done" in cls(row(EX0, 0)))
         check("reload preserves the draft in storage", st()["draft"]["exercises"][0]["sets"][0] is not None)
 
-        # unknown menu selections are dropped on load rather than rendering nothing
+        # unknown menu selections are dropped on load rather than rendering nothing, and a draft
+        # carrying the same movement twice (only reachable by hand-editing or importing) collapses
+        # to one entry rather than rendering two cards over it
         page.evaluate("""() => {
           const s = JSON.parse(localStorage.getItem('lift.v1'));
           s.draft.core.push({ exerciseId: 'core-does-not-exist', sets: [null, null, null] });
+          s.draft.extras = [
+            { exerciseId: 'pushups', sets: [{ reps: 15, weight: 5, rpe: null }, null, null] },
+            { exerciseId: 'pushups', sets: [null, null, null] },
+            { exerciseId: 'not-a-movement', sets: [null] },
+          ];
           localStorage.setItem('lift.v1', JSON.stringify(s));
         }""")
         page.reload()
         page.wait_for_selector(EX0)
         check("normalizeDraft drops selections with no menu item",
               all(c["exerciseId"] != "core-does-not-exist" for c in st()["draft"]["core"]), st()["draft"]["core"])
+        ex = st()["draft"]["extras"]
+        check("normalizeDraft dedupes extras and keeps the first occurrence",
+              [e["exerciseId"] for e in ex] == ["pushups"] and ex[0]["sets"][0] is not None, ex)
+        check("normalizeDraft drops extras with no menu item, and renders one card",
+              page.locator('[data-menu="extras"] .ex[data-group="extras"]').count() == 1,
+              page.locator('[data-menu="extras"] .ex[data-group="extras"]').count())
+        page.click('[data-menu="extras"] .ex[data-group="extras"][data-idx="0"] [data-act="remove"]')
 
         # a corrupt blob is stashed, not destroyed
         page.evaluate("""() => localStorage.setItem('lift.v1', JSON.stringify({ schemaVersion: 99, junk: 1 }))""")

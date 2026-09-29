@@ -154,12 +154,18 @@ function normalizeDraft(draft, entry) {
   if (rebuiltExercises.length !== origLen) changed = true;
   draft.exercises = rebuiltExercises;
 
-  // Drop selections whose menu item no longer exists — they'd render nothing but still count toward FINISH.
+  // Drop selections whose menu item no longer exists — they'd render nothing but still count toward
+  // FINISH — and collapse repeats of the same id, keeping the first. These lists are one-entry-per-
+  // movement by construction (the chips and + ADD both refuse a second), so a duplicate only ever
+  // arrives from a hand-edited or imported draft; left alone it renders two cards over one movement.
   for (const kind of ["core", "stabilizers", "extras"]) {
     const menu = menuFor(kind);
+    const seen = new Set();
     draft[kind] = draft[kind].flatMap(sel => {
       const m = menu.find(x => x.id === sel.exerciseId);
       if (!m) { changed = true; return []; }
+      if (seen.has(sel.exerciseId)) { changed = true; return []; }
+      seen.add(sel.exerciseId);
       repad(sel, m.sets);
       return [sel];
     });
@@ -640,16 +646,29 @@ function onFloorPointerDown(ev) {
   const dir = Number(btn.dataset.step);
   stepField(row, name, dir);
 
-  let repeat = null;
-  const hold = setTimeout(() => { repeat = setInterval(() => stepField(row, name, dir), REPEAT_MS); }, HOLD_MS);
-  const end = () => {
-    clearTimeout(hold);
-    if (repeat) clearInterval(repeat);
-    for (const type of ["pointerup", "pointercancel", "pointerleave"]) btn.removeEventListener(type, end);
+  const id = ev.pointerId;
+  let hold = null, repeat = null;
+
+  const end = (e) => {
+    if (e && e.pointerId !== id) return; // a second finger's release is not this press's release
+    clearTimeout(hold); clearInterval(repeat);
+    hold = repeat = null;
+    for (const type of ["pointerup", "pointercancel"]) window.removeEventListener(type, end, true);
+    btn.removeEventListener("pointerleave", end);
   };
-  // Bound to the button itself, and torn down on the first of the three to fire — pointerleave
-  // doesn't bubble, and a per-press listener can't stack the way a delegated one would.
-  for (const type of ["pointerup", "pointercancel", "pointerleave"]) btn.addEventListener(type, end);
+  // Detached mid-hold is the case that would otherwise leak: any render() blows away #floor, so the
+  // button and the input under it are gone while the timers keep firing at a node nobody can see.
+  const alive = () => { if (btn.isConnected) return true; end(); return false; };
+
+  hold = setTimeout(() => {
+    if (!alive()) return;
+    repeat = setInterval(() => { if (alive()) stepField(row, name, dir); }, REPEAT_MS);
+  }, HOLD_MS);
+
+  // pointerup/pointercancel go on window (capture) so the release still lands after a re-render
+  // detaches the button; pointerleave stays on the button, where sliding a thumb off stops it.
+  for (const type of ["pointerup", "pointercancel"]) window.addEventListener(type, end, true);
+  btn.addEventListener("pointerleave", end);
 }
 
 function commit() { editing = null; saveState(); render(); }
