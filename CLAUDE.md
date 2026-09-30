@@ -50,11 +50,13 @@ git push                                   # that's the whole deploy
 - Push ONLY `main`. The local branches `dev-history` and `old-sullivan-lift`
   are archives that must never be pushed.
 - Never force-push unless Jeff explicitly asks.
-- Pushes authenticate as the `ikkaruscrane` GitHub account via gh's credential
-  helper (`gh auth setup-git` was run once). If a push comes back 403 as
-  `Sullivan-Jeff_bcgprod`, the keychain has fallen back to the BCG enterprise
-  account — have Jeff run `gh auth login` (as ikkaruscrane) and
-  `gh auth setup-git` again.
+- Pushes authenticate as `ikkaruscrane` and are pinned repo-locally so they
+  don't depend on which gh account is "active": this repo's git config clears
+  inherited credential helpers and uses `!gh auth git-credential`, and the
+  origin URL embeds the username (`https://ikkaruscrane@github.com/...`).
+  If a push still 403s as `Sullivan-Jeff_bcgprod`, the ikkaruscrane login
+  expired — have Jeff run `gh auth login` (as ikkaruscrane); the repo-local
+  pinning then works again without further setup.
 - This repo is PUBLIC. Never commit personal health data: the health analysis
   outputs live one level up in the Training folder, and `analysis/` is
   gitignored for the raw Apple Health extract. Keep it that way.
